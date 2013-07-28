@@ -29,6 +29,7 @@ public class Main extends JavaPlugin {
 	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
 	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use points from Vault to buy things.
 	 * - Add new commands:
+	 * # /quake - Teleport you to main lobby
 	 * # /quake setmin [arena] [min] - Set minimum player requirement for arena
 	 * # /quake setmax [arena] [max] - Set maximum player requirement for arena
 	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one.
@@ -41,6 +42,9 @@ public class Main extends JavaPlugin {
 	 * if any player leaves which cause total amount of players is less than minimum requirement,
 	 * match still starts
 	 * # Arena started, players leaves when only 1 player is left; match don't stop
+	 * # You can see other arena's scoreboard stats if you are playing
+	 * # No errors if you typed commands wrong.
+	 * # No notification if you leaved the game.
 	 */
 
     public static Logger log;

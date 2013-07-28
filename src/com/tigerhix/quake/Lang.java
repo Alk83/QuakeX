@@ -42,6 +42,7 @@ public enum Lang {
     ARENA_NOT_JOINED("arena-not-joined", "&4* You are not in-game!"),
     ARENA_ALREADY_STARTED("arena-already-started", "&4* Arena is already started!"),
     ARENA_FULL("arena-full", "&4* Arena is full!"),
+    ARENA_LEAVED("arena-leaved", "&4* You leaved the arena."),
     NO_COMMANDS("no-commands", "&4* Commands are disabled in arenas!"),
     
     PLAYER_JOINED("player-joined", "&7* &b%player &7joined the game."),
@@ -63,7 +64,8 @@ public enum Lang {
     NOT_IN_LOBBY_WORLD("not-in-lobby-world", "&4* You are not in lobby world!"),
     SPAWN_SET("spawn-set", "&7* Spawn set."),
     LOBBY_SET("lobby-set", "&7* Lobby set. Now you can put join signs in this world."),
-    STATS_CHANGED("stats-changed", "&7* Stats changed.");
+    STATS_CHANGED("stats-changed", "&7* Stats changed."),
+    WRONG_COMMAND("wrong-command", "&4* Unknown command.");
 
     private String path;
     private String def;
