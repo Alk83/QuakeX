@@ -1,0 +1,35 @@
+general:
+  vault:
+    enabled: true
+    win: 100
+    kill: 10
+  coins:
+    win: 100
+    kill: 10
+  points:
+    win: 50
+    kill: 5
+  stats:
+    enabled: false
+  winning-points: 25
+  min-waiting-time: 10
+  max-waiting-time: 10
+  after-waiting-time: 10
+railguns:
+  wood:
+    reload: 1500
+    range: 15
+    sound:
+      fire: ITEM_BREAK
+      kill: EXPLODE
+    explosion:
+      enabled: true
+      only-when-hit: true
+      power: 4
+    firework:
+      enabled: true
+      color: RED
+      type: BALL_LARGE
+arenas:
+  enabled-arenas: []
+players: []

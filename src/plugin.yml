@@ -1,0 +1,11 @@
+name: QuakeX
+main: com.tigerhix.quake.Main
+authors: [TigerHix]
+version: Premium
+website: http://dev.bukkit.org/server-mods/quake-deathmatch
+description: A deathmatch game inspired by Hypixel.
+softdepend: [Vault]
+commands:
+   quake:
+      description: Quake commands.
+      usage: /<command>
