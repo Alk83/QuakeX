@@ -24,6 +24,7 @@ railguns:
       kill: EXPLODE
     explosion:
       enabled: true
+      only-when-hit: true
       power: 4
     firework:
       enabled: true

@@ -1,7 +1,7 @@
 name: QuakeX
 main: com.tigerhix.quake.Main
 authors: [TigerHix]
-version: Italian 1.0.0
+version: Premium
 website: http://dev.bukkit.org/server-mods/quake-deathmatch
 description: A deathmatch game inspired by Hypixel.
 softdepend: [Vault]

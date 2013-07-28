@@ -42,6 +42,7 @@ public enum Lang {
     ARENA_NOT_JOINED("arena-not-joined", "&4* You are not in-game!"),
     ARENA_ALREADY_STARTED("arena-already-started", "&4* Arena is already started!"),
     ARENA_FULL("arena-full", "&4* Arena is full!"),
+    NO_COMMANDS("no-commands", "&4* Commands are disabled in arenas!"),
     
     PLAYER_JOINED("player-joined", "&7* &b%player &7joined the game."),
     PLAYER_LEAVED("player-leaved", "&7* &b%player &7leaved the game."),
@@ -53,6 +54,7 @@ public enum Lang {
     
     MET_MIN_REQUIREMENT("met-min-requirement", "&7* Met minimum player requirement! Match starts in %seconds seconds.."),
     MET_MAX_REQUIREMENT("met-max-requirement", "&7* Met maximum player requirement! Match starts in %seconds seconds.."),
+    CANT_MET_MINIMUM_REQUIREMENT("cant-met-minimum-requirement", "&4* Someone leaved and can't meet minimum player requirement right now. Cancelled starting of match..."),
     
     ARENA_CREATED("arena-created", "&7* Arena created and auto-selected. Please use '/quake addspawn' to add spawnpoints."),
     ARENA_SELECTED("arena-selected", "&7* Arena selected."),

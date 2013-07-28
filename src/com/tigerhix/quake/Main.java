@@ -23,6 +23,25 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class Main extends JavaPlugin {
+	
+	/*
+	 * CHANGELOG
+	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
+	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use points from Vault to buy things.
+	 * - Add new commands:
+	 * # /quake setmin [arena] [min] - Set minimum player requirement for arena
+	 * # /quake setmax [arena] [max] - Set maximum player requirement for arena
+	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one.
+	 * - Now keep inventory on death in matches
+	 * - Now player can't break/place blocks in matches
+	 * - Now player can't use commands in arenas except /quake leave
+	 * - Fix bugs:
+	 * # Railgun gave to players don't have a custom name
+	 * # Arena meets the minimum player requirement and ready to start; 
+	 * if any player leaves which cause total amount of players is less than minimum requirement,
+	 * match still starts
+	 * # Arena started, players leaves when only 1 player is left; match don't stop
+	 */
 
     public static Logger log;
     public static PluginManager pm;
@@ -44,6 +63,10 @@ public class Main extends JavaPlugin {
     public List < Location > signLocs = new ArrayList < Location > ();
     
     public Ability woodShoot = new Ability(1, 1500, TimeUnit.MILLISECONDS);
+    public Ability stoneShoot = new Ability(1, 1400, TimeUnit.MILLISECONDS);
+    public Ability ironShoot = new Ability(1, 1300, TimeUnit.MILLISECONDS);
+    public Ability goldShoot = new Ability(1, 1200, TimeUnit.MILLISECONDS);
+    public Ability diamondShoot = new Ability(1, 1100, TimeUnit.MILLISECONDS);
     public Ability exp = new Ability(1, 50, TimeUnit.MILLISECONDS);
 
     @

@@ -3,7 +3,12 @@ package com.tigerhix.quake;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
+import org.bukkit.scoreboard.DisplaySlot;
+import org.bukkit.scoreboard.Objective;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.ScoreboardManager;
 
 public class QuakeArena {
 	
@@ -21,6 +26,10 @@ public class QuakeArena {
     
     int waitingID = 0;
     int scoreboardID = 0;
+    
+    ScoreboardManager manager = Bukkit.getScoreboardManager();
+    Scoreboard board = manager.getNewScoreboard();
+    Objective objective = board.registerNewObjective("score", "playerKillCount");
     
     public void save() {
     	// arenas
@@ -51,6 +60,8 @@ public class QuakeArena {
     	this.players = new ArrayList <String>();
     	this.spawns = new ArrayList <Location>();
     	this.status = "waiting";
+        this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
+        this.objective.setDisplayName(Lang.LEADERBOARD.toString());
     }
 
     public int getMin() {

@@ -4,12 +4,12 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Random;
 
+
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.block.Block;
@@ -27,6 +27,7 @@ import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.player.PlayerCommandPreprocessEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -250,6 +251,21 @@ public class Listeners implements Listener {
             main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity().getInventory()));
         }
     }
+    
+    @
+    EventHandler
+    public void onCommand(PlayerCommandPreprocessEvent evt) {
+    	QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        // If player is playing
+        if (player.arena != "") {
+        	if (!evt.getMessage().equalsIgnoreCase("/quake leave")) { // You can only leave
+        		// Cancel command
+        		evt.setCancelled(true);
+        		// Send message
+        		evt.getPlayer().sendMessage(Lang.NO_COMMANDS.toString());
+        	}
+        }
+    }
 
     @
     EventHandler
@@ -265,12 +281,41 @@ public class Listeners implements Listener {
         if (player.arena != "") { // Is playing
             QuakeArena arena = Utils.getQuakeArena(player.arena);
             if (arena.status == "started") { // Arena started
+            	
                 if (evt.getAction().equals(Action.RIGHT_CLICK_AIR) || evt.getAction().equals(Action.RIGHT_CLICK_BLOCK)) { // Right-clicking
                     
                 	if (p.getItemInHand().getType() == Material.WOOD_HOE) { // Using wooden hoe
                         if (main.woodShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "wood";
+                        }
+                    }
+                	
+                	if (p.getItemInHand().getType() == Material.STONE_HOE) { // Using wooden hoe
+                        if (main.stoneShoot.tryUse(p)) { // Can use
+                            shooted = true;
+                            hoe = "stone";
+                        }
+                    }
+                	
+                	if (p.getItemInHand().getType() == Material.IRON_HOE) { // Using wooden hoe
+                        if (main.ironShoot.tryUse(p)) { // Can use
+                            shooted = true;
+                            hoe = "iron";
+                        }
+                    }
+                	
+                	if (p.getItemInHand().getType() == Material.GOLD_HOE) { // Using wooden hoe
+                        if (main.goldShoot.tryUse(p)) { // Can use
+                            shooted = true;
+                            hoe = "gold";
+                        }
+                    }
+                	
+                	if (p.getItemInHand().getType() == Material.DIAMOND_HOE) { // Using wooden hoe
+                        if (main.diamondShoot.tryUse(p)) { // Can use
+                            shooted = true;
+                            hoe = "diamond";
                         }
                     }
                 	
@@ -327,8 +372,12 @@ public class Listeners implements Listener {
                     // Sound, explosion, firework..
 
                     if (shooted) { // If shooted
-                        // Play sound
-                        w.playSound(p.getLocation(), Sound.ITEM_BREAK, 10, 1);
+                        // Play shoot sound
+                    	Utils.playSound(p, "fireworks.blast", p.getLocation(), (float) Utils.randomInt(1, 100)/100, 2F);
+                    	if (hit != null) { // Target found
+                    		// Play death sound
+                        	Utils.playSound(p, "fireworks.twinkle", p.getLocation(), 1F, 2F);
+                    	}
                         // Play explosion
                         if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.enabled")) { // Explosion enabled
                             if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.only-when-hit")) { // Explosion only on targets

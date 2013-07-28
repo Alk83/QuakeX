@@ -23,6 +23,20 @@ railguns:
       fire: ITEM_BREAK
       kill: EXPLODE
     explosion:
+      enabled: false
+      only-when-hit: true
+      power: 4
+    firework:
+      enabled: true
+      color: RED
+      type: BALL
+  stone:
+    reload: 1500
+    range: 15
+    sound:
+      fire: ITEM_BREAK
+      kill: EXPLODE
+    explosion:
       enabled: true
       only-when-hit: true
       power: 4

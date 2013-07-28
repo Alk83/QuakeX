@@ -70,7 +70,8 @@ public class QuakeCommand implements CommandExecutor{
         	}
         	
         	return true;
-        } else if (args.length == 2) {
+        }
+        if (args.length == 2) {
         	String action = args[0];
         	String name = args[1];
         	
@@ -125,7 +126,8 @@ public class QuakeCommand implements CommandExecutor{
         	}
         	
         	return true;
-        } else if (args.length == 3) {
+        }
+        if (args.length == 3) {
         	String action = args[0];
         	String player = args[1];
         	String amount = args[2];
@@ -139,6 +141,26 @@ public class QuakeCommand implements CommandExecutor{
         		if (Utils.isQuakePlayer(player)) {
         			Utils.setCoins(player, Integer.parseInt(amount));
         			p.sendMessage(Lang.STATS_CHANGED.toString());
+        		}
+        	}
+        	return true;
+        }
+        if (args.length == 3) {
+        	String action = args[0];
+        	String arena = args[1];
+        	String amount = args[2];
+        	if (action.equalsIgnoreCase("setmin")) {
+        		if (Utils.getQuakeArena(arena) != null) {
+        			QuakeArena a = Utils.getQuakeArena(arena);
+        			a.min = Integer.parseInt(amount);
+        			a.save();
+        		}
+        	}
+        	if (action.equalsIgnoreCase("setmax")) {
+        		if (Utils.getQuakeArena(arena) != null) {
+        			QuakeArena a = Utils.getQuakeArena(arena);
+        			a.max = Integer.parseInt(amount);
+        			a.save();
         		}
         	}
         	return true;

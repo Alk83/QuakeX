@@ -7,6 +7,8 @@ import java.util.Map.Entry;
 import java.util.Random;
 import java.util.logging.Logger;
 
+import net.minecraft.server.v1_6_R2.Packet62NamedSoundEffect;
+
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
@@ -16,6 +18,7 @@ import org.bukkit.Location;
 import org.bukkit.FireworkEffect.Type;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
@@ -100,6 +103,24 @@ public class Utils {
             arena.status = "waiting";
             arena.seconds = 0;
         }
+        // If arena only have one player
+        if (arena.players.size() == 1) {
+        	// If arena is started
+        	if (arena.status == "started") {
+        		// Stop game
+        		stopGame(arena.name, arena.players.get(0));
+        	}
+        }
+        // If total amount of players is less than minimum requirements
+        if (arena.players.size() < arena.min) {
+        	// Cancel 30-sec/10-sec wait
+            if (arena.waitingID != 0) {
+                Bukkit.getScheduler().cancelTask(arena.waitingID);
+                arena.waitingID = 0;
+                broadcastPlayers(arena.name, Lang.CANT_MET_MINIMUM_REQUIREMENT.toString());
+            }
+        }
+        
         lobbyTeleport(p);
         // Toggle inventory
         p.getInventory().clear();
@@ -697,6 +718,14 @@ public class Utils {
             color = Color.YELLOW;
         }
         return color;
+    }
+    
+    public static void playSound(Player to, String sound, Location loc, float pitch, float volume) {
+        ((CraftPlayer) to).getHandle().playerConnection.sendPacket(new Packet62NamedSoundEffect(sound, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), pitch, volume));
+    }
+ 
+    public static void playSound(Player to, String sound, float pitch, float volume) {
+        playSound(to, sound, to.getLocation(), pitch, volume);
     }
 
 }
