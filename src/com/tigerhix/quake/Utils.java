@@ -192,13 +192,11 @@ public class Utils {
         arena.status = "started";
         broadcastPlayers(name, Lang.MATCH_STARTED.toString());
         // Register scoreboard
-        /*
         ScoreboardManager manager = Bukkit.getScoreboardManager();
         Scoreboard board = manager.getNewScoreboard();
         Objective objective = board.registerNewObjective("score", "playerKillCount");
         objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         objective.setDisplayName(Lang.LEADERBOARD.toString());
-        */
         for (String pname: arena.players) {
             final Player p = main.getServer().getPlayer(pname);
             final QuakePlayer player = getQuakePlayer(pname);
@@ -262,10 +260,10 @@ public class Utils {
             // Potion effects
             setPotionEffects(p);
             // Set scoreboard
-            final Score score = arena.objective.getScore(p);
+            final Score score = objective.getScore(p);
             score.setScore(0);
-            p.setScoreboard(arena.manager.getNewScoreboard());
-            p.setScoreboard(arena.board);
+            p.setScoreboard(manager.getNewScoreboard());
+            p.setScoreboard(board);
             // Set repeat
             arena.scoreboardID = main.getServer().getScheduler().scheduleSyncRepeatingTask(main, new BukkitRunnable() {
 
