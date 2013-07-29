@@ -46,6 +46,18 @@ public class Main extends JavaPlugin {
 	 * # No errors if you typed commands wrong.
 	 * # No notification if you leaved the game.
 	 */
+	
+	/*
+	 * TODO:
+	 * - VIP rank
+	 * - Buy & use railguns
+	 * - Hats and kits
+	 * - Permissions
+	 * - Regioned arena stats
+	 * - Stop players from respawning all in the same area
+	 * - No damage from lava
+	 * - Must buy first
+	 */
 
     public static Logger log;
     public static PluginManager pm;
@@ -56,8 +68,6 @@ public class Main extends JavaPlugin {
     public HashMap < String, QuakeArena > arenas = new HashMap < String, QuakeArena > ();
     
     public HashMap <String, String> inventories = new HashMap<String, String>();
-
-    public IconMenu buyMenu;
     
     public Boolean statsEnabled;
     public Boolean vaultEnabled = false;
@@ -84,7 +94,6 @@ public class Main extends JavaPlugin {
 				loadConfig();
 				// Define variables
 				if (getConfig().getString("general.lobby.spawn") != null) {
-		    		// TODO: try catch
 		    		getLogger().info("Lobby spawn set!");
 		    		String stringLoc = getConfig().getString("general.lobby.spawn");
 		    		lobbyLoc = Utils.stringToLocation(stringLoc, false);
@@ -113,19 +122,6 @@ public class Main extends JavaPlugin {
         Utils.setupScoreboardTimer();
         // Register command
         getCommand("quake").setExecutor(new QuakeCommand(this));
-        // Setup the buy menu
-        buyMenu = new IconMenu(Lang.BUY_MENU.toString(), 27, new IconMenu.OptionClickEventHandler() {@
-            Override
-            public void onOptionClick(IconMenu.OptionClickEvent event) {
-                event.getPlayer().sendMessage("You have chosen " + event.getName());
-                event.setWillClose(true);
-            }
-        }, this)
-            .setOption(0, new ItemStack(Material.WOOD_HOE, 1), Lang.WOOD_HOE.toString(), Lang.WOOD_HOE_DESCRIPTION.toString())
-            .setOption(1, new ItemStack(Material.STONE_HOE, 1), Lang.STONE_HOE.toString(), Lang.STONE_HOE_DESCRIPTION.toString())
-            .setOption(2, new ItemStack(Material.IRON_HOE, 1), Lang.IRON_HOE.toString(), Lang.IRON_HOE_DESCRIPTION.toString())
-            .setOption(3, new ItemStack(Material.GOLD_HOE, 1), Lang.GOLD_HOE.toString(), Lang.GOLD_HOE_DESCRIPTION.toString())
-            .setOption(4, new ItemStack(Material.DIAMOND_HOE, 1), Lang.DIAMOND_HOE.toString(), Lang.DIAMOND_HOE_DESCRIPTION.toString());
     }
 
     public void loadLang() {

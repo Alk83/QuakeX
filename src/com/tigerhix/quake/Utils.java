@@ -342,11 +342,13 @@ public class Utils {
     public static void killPlayer(String killername, String killedname) {
         // Kill player
         main.getServer().getPlayer(killedname).setHealth(0.0);
+        
         QuakePlayer killer = getQuakePlayer(killername);
         QuakePlayer killed = getQuakePlayer(killedname);
         // Add score
         killer.score++;
         killed.died = true;
+        main.getServer().getPlayer(killedname).sendMessage(String.valueOf(killed.died));
         // Broadcast
         Utils.broadcastPlayers(killer.arena, Lang.PLAYER_KILLED_PLAYER.toString().replace("%killed", killed.name).replace("%killer", killer.name));
         // Check if killer reaches winning points
@@ -355,6 +357,7 @@ public class Utils {
         }
         // Add points for killer
         setPoints(killername, getPoints(killername) + main.getConfig().getInt("general.points.kill"));
+        if (!main.vaultEnabled) setCoins(killername, getCoins(killername) + main.getConfig().getInt("general.coins.kill"));
     }
 
     // For join before match

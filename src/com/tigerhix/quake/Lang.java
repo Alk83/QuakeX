@@ -57,6 +57,15 @@ public enum Lang {
     MET_MAX_REQUIREMENT("met-max-requirement", "&7* Met maximum player requirement! Match starts in %seconds seconds.."),
     CANT_MET_MINIMUM_REQUIREMENT("cant-met-minimum-requirement", "&4* Someone leaved and can't meet minimum player requirement right now. Cancelled starting of match..."),
     
+    SHOP_ALREADY_PURCHASED("shop-already-purchased", "&4Already purchased"),
+    SHOP_RELOAD_TIME("shop-reload-time", "&eReload time: "),
+    SHOP_RELOAD_TIME_FORMAT("shop-reload-time-format", "&b%times"),
+    SHOP_PRICE("shop-price", "&ePrice: "),
+    SHOP_PRICE_FORMAT("shop-price-format", "&b$%price"),
+    
+    PURCHASED("purchased", "&7* Successfully purchased."),
+    
+    
     ARENA_CREATED("arena-created", "&7* Arena created and auto-selected. Please use '/quake addspawn' to add spawnpoints."),
     ARENA_SELECTED("arena-selected", "&7* Arena selected."),
     JOIN_SIGN_SET("join-sign-set", "&7* Join sign set."),

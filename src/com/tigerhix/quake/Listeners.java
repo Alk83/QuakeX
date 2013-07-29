@@ -1,10 +1,11 @@
 package com.tigerhix.quake;
 
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -34,6 +35,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import com.tigerhix.quake.Main;
 
@@ -128,7 +130,6 @@ public class Listeners implements Listener {
                             if (arena.status == "waiting") { // Arena not playing
                                 if (Utils.getQuakeArena(name).players.size() < Utils.getQuakeArena(name).max) { // Not full
                                     Utils.joinGame(p, name);
-                                    // TODO: Inventory clear
                                 } else {
                                     p.sendMessage(Lang.ARENA_FULL.toString());
                                 }
@@ -177,26 +178,26 @@ public class Listeners implements Listener {
         }
 
     }
-    
+
     // Set to monitor; because Essentials use HIGHEST
-    
+
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onBlockPlace(final BlockPlaceEvent evt) {
-    	QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
         // If player is playing
         if (player.arena != "") {
-        	evt.setCancelled(true);
+            evt.setCancelled(true);
         }
     }
-    
+
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onBlockBreak(final BlockBreakEvent evt) {
-    	QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
         // If player is playing
         if (player.arena != "") {
-        	evt.setCancelled(true);
+            evt.setCancelled(true);
         }
     }
 
@@ -251,19 +252,19 @@ public class Listeners implements Listener {
             main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity().getInventory()));
         }
     }
-    
+
     @
     EventHandler
     public void onCommand(PlayerCommandPreprocessEvent evt) {
-    	QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
         // If player is playing
         if (player.arena != "") {
-        	if (!evt.getMessage().equalsIgnoreCase("/quake leave")) { // You can only leave
-        		// Cancel command
-        		evt.setCancelled(true);
-        		// Send message
-        		evt.getPlayer().sendMessage(Lang.NO_COMMANDS.toString());
-        	}
+            if (!evt.getMessage().equalsIgnoreCase("/quake leave")) { // You can only leave
+                // Cancel command
+                evt.setCancelled(true);
+                // Send message
+                evt.getPlayer().sendMessage(Lang.NO_COMMANDS.toString());
+            }
         }
     }
 
@@ -281,54 +282,51 @@ public class Listeners implements Listener {
         if (player.arena != "") { // Is playing
             QuakeArena arena = Utils.getQuakeArena(player.arena);
             if (arena.status == "started") { // Arena started
-            	
+
                 if (evt.getAction().equals(Action.RIGHT_CLICK_AIR) || evt.getAction().equals(Action.RIGHT_CLICK_BLOCK)) { // Right-clicking
-                    
-                	if (p.getItemInHand().getType() == Material.WOOD_HOE) { // Using wooden hoe
+
+                    if (p.getItemInHand().getType() == Material.WOOD_HOE) { // Using wooden hoe
                         if (main.woodShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "wood";
                         }
                     }
-                	
-                	if (p.getItemInHand().getType() == Material.STONE_HOE) { // Using wooden hoe
+
+                    if (p.getItemInHand().getType() == Material.STONE_HOE) { // Using wooden hoe
                         if (main.stoneShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "stone";
                         }
                     }
-                	
-                	if (p.getItemInHand().getType() == Material.IRON_HOE) { // Using wooden hoe
+
+                    if (p.getItemInHand().getType() == Material.IRON_HOE) { // Using wooden hoe
                         if (main.ironShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "iron";
                         }
                     }
-                	
-                	if (p.getItemInHand().getType() == Material.GOLD_HOE) { // Using wooden hoe
+
+                    if (p.getItemInHand().getType() == Material.GOLD_HOE) { // Using wooden hoe
                         if (main.goldShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "gold";
                         }
                     }
-                	
-                	if (p.getItemInHand().getType() == Material.DIAMOND_HOE) { // Using wooden hoe
+
+                    if (p.getItemInHand().getType() == Material.DIAMOND_HOE) { // Using wooden hoe
                         if (main.diamondShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "diamond";
                         }
                     }
-                	
-                	// Detect target
-                	
-                	if (shooted) {
-                		int range = main.getConfig().getInt("railguns" + hoe + "range");
 
-                        Location pPos = p.getEyeLocation();
-                        Vector3D pDir = new Vector3D(pPos.getDirection());
+                    // Detect target
 
-                        Vector3D pStart = new Vector3D(pPos);
-                        Vector3D pEnd = pStart.add(pDir.multiply(range));
+                    if (shooted) {
+
+                        // Get range
+
+                        int range = main.getConfig().getInt("railguns" + hoe + "range");
 
                         // EXP Animation
 
@@ -343,41 +341,45 @@ public class Listeners implements Listener {
                             }
                         }
 
-                        // Get nearby entities
-                        for (Player target: p.getWorld().getPlayers()) {
-                            // Bounding box of the given player
-                            Vector3D targetPos = new Vector3D(target.getLocation());
-                            Vector3D minimum = targetPos.add(-1.5, -1, -1.5);
-                            Vector3D maximum = targetPos.add(1.5, 2.67, 1.5);
+                        Location to = p.getTargetBlock(null, range).getLocation();
 
-                            if (target != p && hasIntersection(pStart, pEnd, minimum, maximum)) {
-                                if (hit == null ||
-                                    hit.getLocation().distanceSquared(pPos) >
-                                    target.getLocation().distanceSquared(pPos)) {
+                        LocationIterator blocksToAdd = new LocationIterator(p.getWorld(), p.getEyeLocation().toVector(), new Vector(to.getBlockX() - p.getEyeLocation().getBlockX(), to.getBlockY() - p.getEyeLocation().getBlockY(), to.getBlockZ() - p.getEyeLocation().getBlockZ()), 0.0D, (int) Math.floor(p.getEyeLocation().distanceSquared(to)));
+                        Location blockToAdd = null;
 
-                                    hit = target;
+                        int streak = 0;
+
+                        while (blocksToAdd.hasNext()) {
+                            blockToAdd = blocksToAdd.next();
+                            for (String name: arena.players) {
+                            	if (p.getName() != name) {
+                                Player p1 = main.getServer().getPlayer(name);
+                                if ((p1.getLocation().distance(blockToAdd) <= 1.5D) || (p1.getEyeLocation().distance(blockToAdd) <= 1.5D) && ! Utils.getQuakePlayer(p1.getName()).died) {
+                                    Utils.killPlayer(p.getName(), p1.getName());
+                                    hit = p1;
+                                    streak++;
                                 }
+                            	}
+                            }
+                            if (blockToAdd.getBlock().getType().isSolid()) {
+                                break;
                             }
                         }
 
-                        if (hit != null) { // Target found
-                            if (!Utils.getQuakePlayer(hit.getName()).died) { // Target alive
-                                // Kill player
-                                Utils.killPlayer(p.getName(), hit.getName());
-                            }
+                        if (streak >= 2) {
+                            Utils.broadcastPlayers(arena.name, streak + " KILLS");
                         }
-                	}
-                    
-                    
+                    }
+
+
                     // Sound, explosion, firework..
 
                     if (shooted) { // If shooted
                         // Play shoot sound
-                    	Utils.playSound(p, "fireworks.blast", p.getLocation(), (float) Utils.randomInt(1, 100)/100, 2F);
-                    	if (hit != null) { // Target found
-                    		// Play death sound
-                        	Utils.playSound(p, "fireworks.twinkle", p.getLocation(), 1F, 2F);
-                    	}
+                        Utils.playSound(p, "fireworks.blast", p.getLocation(), (float) Utils.randomInt(1, 100) / 100, 2F);
+                        if (hit != null) { // Target found
+                            // Play death sound
+                            Utils.playSound(p, "fireworks.twinkle", p.getLocation(), 1F, 2F);
+                        }
                         // Play explosion
                         if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.enabled")) { // Explosion enabled
                             if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.only-when-hit")) { // Explosion only on targets
