@@ -3,12 +3,10 @@ package com.tigerhix.quake;
 import java.util.logging.Logger;
 
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 
 import com.tigerhix.quake.Main;
 import com.tigerhix.quake.Utils;
@@ -37,25 +35,7 @@ public class QuakeCommand implements CommandExecutor{
         	
         	if (action.equalsIgnoreCase("buy") && op) {
         		if (Utils.isQuakePlayer(p.getName())) {
-        			// Setup the buy menu
-        	        String [] woodDescription = {Lang.WOOD_HOE_DESCRIPTION.toString(), Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString().replace("%time", String.valueOf((float) main.getConfig().getInt("railguns.wood.reload")/1000))};
-        	        IconMenu buyMenu = new IconMenu(Lang.BUY_MENU.toString(), 27, new IconMenu.OptionClickEventHandler() {
-        	        	@
-        	            Override
-        	            public void onOptionClick(IconMenu.OptionClickEvent evt) {
-        	        		if (evt.getPosition() == 0) { // Wood hoe
-        	        			
-        	        		}
-        	                evt.getPlayer().sendMessage("You have chosen " + evt.getName());
-        	                evt.setWillClose(true);
-        	            }
-        	        }, main)
-        	            .setOption(0, new ItemStack(Material.WOOD_HOE, 1), Lang.WOOD_HOE.toString(),  woodDescription)
-        	            .setOption(1, new ItemStack(Material.STONE_HOE, 1), Lang.STONE_HOE.toString(), Lang.STONE_HOE_DESCRIPTION.toString())
-        	            .setOption(2, new ItemStack(Material.IRON_HOE, 1), Lang.IRON_HOE.toString(), Lang.IRON_HOE_DESCRIPTION.toString())
-        	            .setOption(3, new ItemStack(Material.GOLD_HOE, 1), Lang.GOLD_HOE.toString(), Lang.GOLD_HOE_DESCRIPTION.toString())
-        	            .setOption(4, new ItemStack(Material.DIAMOND_HOE, 1), Lang.DIAMOND_HOE.toString(), Lang.DIAMOND_HOE_DESCRIPTION.toString());
-        	        buyMenu.open(p);
+        			Utils.openMenu(p);
         		}
         		return true;
         	}
@@ -85,6 +65,9 @@ public class QuakeCommand implements CommandExecutor{
         	}
         	
         	if (action.equalsIgnoreCase("lobby")) {
+        		if (Utils.getQuakePlayer(p.getName()).arena != "") { // Is Playing
+        			Utils.leaveGame(p);
+        		}
         		Utils.lobbyTeleport(p);
         		return true;
         	}
@@ -92,8 +75,13 @@ public class QuakeCommand implements CommandExecutor{
         	if (action.equalsIgnoreCase("leave")) {
         		if (Utils.isQuakePlayer(p.getName())) {
         			if (Utils.getQuakePlayer(p.getName()).arena != "") {
-        				Utils.leaveGame(p);
-        				p.sendMessage(Lang.ARENA_LEAVED.toString());
+        				if (Utils.getQuakeArena(Utils.getQuakePlayer(p.getName()).arena).status != "finished") {
+        					Utils.leaveGame(p);
+        					p.sendMessage(Lang.ARENA_LEAVED.toString());
+        				} else {
+        					p.sendMessage(Lang.CANT_LEAVE_ARENA.toString());
+            				return true;
+        				}
         			} else {
         				p.sendMessage(Lang.ARENA_NOT_JOINED.toString());
         				return true;
@@ -130,6 +118,12 @@ public class QuakeCommand implements CommandExecutor{
         		}
         		return true;
         	}
+        	
+        	if (action.equalsIgnoreCase("start") && op) {
+        		Utils.startGame(name);
+        		return true;
+        	}
+        	
         	if (action.equalsIgnoreCase("stop") && op) {
         		Utils.stopGame(name, p.getName());
         		return true;

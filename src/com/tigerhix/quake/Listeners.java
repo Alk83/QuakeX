@@ -1,11 +1,9 @@
 package com.tigerhix.quake;
 
 import java.lang.reflect.Method;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -45,7 +43,9 @@ public class Listeners implements Listener {
 
     public Listeners(Main main) {
         this.main = main;
-        main.getServer().getPluginManager().registerEvents(this, main);
+        main.getServer()
+            .getPluginManager()
+            .registerEvents(this, main);
     }
 
     // Lobby
@@ -56,19 +56,23 @@ public class Listeners implements Listener {
         Block b = evt.getBlock();
         Player p = evt.getPlayer();
         // Check sign
-        if (b.getType() == Material.WALL_SIGN || b.getType() == Material.SIGN_POST) { // Is sign
-            List < String > signs = main.getConfig().getStringList("general.lobby.signs");
-            Location loc = b.getLocation();
-            String stringLoc = loc.getX() + "," + loc.getY() + "," + loc.getZ();
-            if (signs.contains(stringLoc)) { // Is lobby sign
-                if (b.getWorld() == main.lobbyLoc.getWorld()) { // In lobby world
-                    // Save to config
-                    signs.remove(stringLoc);
-                    main.getConfig().set("general.lobby.signs", signs);
-                    main.saveConfig();
-                    p.sendMessage(Lang.JOIN_SIGN_REMOVED.toString());
-                    // Update signLocs - signLocs is loaded in onEnable(), it won't update automatically until reload.
-                    main.signLocs.remove(loc);
+        if (p.isOp()) { // Is OP
+            if (b.getType() == Material.WALL_SIGN || b.getType() == Material.SIGN_POST) { // Is sign
+                List < String > signs = main.getConfig()
+                    .getStringList("general.lobby.signs");
+                Location loc = b.getLocation();
+                String stringLoc = loc.getX() + "," + loc.getY() + "," + loc.getZ();
+                if (signs.contains(stringLoc)) { // Is lobby sign
+                    if (b.getWorld() == main.lobbyLoc.getWorld()) { // In lobby world
+                        // Save to config
+                        signs.remove(stringLoc);
+                        main.getConfig()
+                            .set("general.lobby.signs", signs);
+                        main.saveConfig();
+                        p.sendMessage(Lang.JOIN_SIGN_REMOVED.toString());
+                        // Update signLocs - signLocs is loaded in onEnable(), it won't update automatically until reload.
+                        main.signLocs.remove(loc);
+                    }
                 }
             }
         }
@@ -82,8 +86,10 @@ public class Listeners implements Listener {
         Sign s = (Sign) state;
         Player p = evt.getPlayer();
         // Check sign
-        if (evt.getLine(0) != null || (!(evt.getLine(0).equals("")))) { // Not null
-            if (evt.getLine(0).equalsIgnoreCase("[Quake]")) { // Has keyword
+        if (evt.getLine(0) != null || (!(evt.getLine(0)
+            .equals("")))) { // Not null
+            if (evt.getLine(0)
+                .equalsIgnoreCase("[Quake]")) { // Has keyword
                 if (Utils.getQuakeArena(evt.getLine(1)) != null) { // Has arena
                     if (b.getWorld() == main.lobbyLoc.getWorld()) { // In lobby world
                         // Set up sign
@@ -94,11 +100,13 @@ public class Listeners implements Listener {
                         s.update();
                         p.sendMessage(Lang.JOIN_SIGN_SET.toString());
                         // Save to config
-                        List < String > signs = main.getConfig().getStringList("general.lobby.signs");
+                        List < String > signs = main.getConfig()
+                            .getStringList("general.lobby.signs");
                         Location loc = s.getLocation();
                         String stringLoc = Utils.locationToString(loc, true);
                         signs.add(stringLoc);
-                        main.getConfig().set("general.lobby.signs", signs);
+                        main.getConfig()
+                            .set("general.lobby.signs", signs);
                         main.saveConfig();
                         // Update signLocs - signLocs is loaded in onEnable(), it won't update automatically until reload.
                         main.signLocs.add(loc);
@@ -128,7 +136,9 @@ public class Listeners implements Listener {
                     if (arena != null) { // Has arena
                         if (player.arena == "") { // Player not playing
                             if (arena.status == "waiting") { // Arena not playing
-                                if (Utils.getQuakeArena(name).players.size() < Utils.getQuakeArena(name).max) { // Not full
+                                if (Utils.getQuakeArena(name)
+                                    .players.size() < Utils.getQuakeArena(name)
+                                    .max) { // Not full
                                     Utils.joinGame(p, name);
                                 } else {
                                     p.sendMessage(Lang.ARENA_FULL.toString());
@@ -159,7 +169,8 @@ public class Listeners implements Listener {
         if (!main.players.containsKey(p.getName())) {
             main.players.put(p.getName(), new QuakePlayer(main, p));
             // If player is not initialized
-            if (main.getConfig().get("players." + p.getName() + ".coins") == null) {
+            if (main.getConfig()
+                .get("players." + p.getName() + ".coins") == null) {
                 Utils.setCoins(p.getName(), 100);
             }
         }
@@ -184,7 +195,8 @@ public class Listeners implements Listener {
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onBlockPlace(final BlockPlaceEvent evt) {
-        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer()
+            .getName());
         // If player is playing
         if (player.arena != "") {
             evt.setCancelled(true);
@@ -194,7 +206,8 @@ public class Listeners implements Listener {
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onBlockBreak(final BlockBreakEvent evt) {
-        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer()
+            .getName());
         // If player is playing
         if (player.arena != "") {
             evt.setCancelled(true);
@@ -204,12 +217,14 @@ public class Listeners implements Listener {
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onRespawn(final PlayerRespawnEvent evt) {
-        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer()
+            .getName());
         // If player is playing
         if (player.arena != "") {
             player.died = false;
             // Teleport
-            main.getLogger().info(Utils.locationToString(Utils.getRandomTeleport(evt.getPlayer()), false));
+            main.getLogger()
+                .info(Utils.locationToString(Utils.getRandomTeleport(evt.getPlayer()), false));
             evt.setRespawnLocation(Utils.getRandomTeleport(evt.getPlayer()));
             // Potion effects
             new BukkitRunnable() {@
@@ -219,8 +234,11 @@ public class Listeners implements Listener {
                 }
             }.runTaskLater(main, 3L);
             // Give back inventory
-            Inventory i = Utils.StringToInventory(main.inventories.get(evt.getPlayer().getName()));
-            evt.getPlayer().getInventory().setContents(i.getContents());
+            Inventory i = Utils.StringToInventory(main.inventories.get(evt.getPlayer()
+                .getName()));
+            evt.getPlayer()
+                .getInventory()
+                .setContents(i.getContents());
         }
     }
 
@@ -243,27 +261,32 @@ public class Listeners implements Listener {
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent evt) {
-        QuakePlayer player = Utils.getQuakePlayer(evt.getEntity().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getEntity()
+            .getName());
         // If player is playing
         if (player.arena != "") {
             // Cancel death messages! Use Utils.broadcastMessage instead.
             evt.setDeathMessage(null);
             // Save inventory
-            main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity().getInventory()));
+            main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity()
+                .getInventory()));
         }
     }
 
     @
     EventHandler
     public void onCommand(PlayerCommandPreprocessEvent evt) {
-        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer()
+            .getName());
         // If player is playing
         if (player.arena != "") {
-            if (!evt.getMessage().equalsIgnoreCase("/quake leave")) { // You can only leave
+            if (!evt.getMessage()
+                .substring(0, 6).equalsIgnoreCase("/quake")) { // You can only leave
                 // Cancel command
                 evt.setCancelled(true);
                 // Send message
-                evt.getPlayer().sendMessage(Lang.NO_COMMANDS.toString());
+                evt.getPlayer()
+                    .sendMessage(Lang.NO_COMMANDS.toString());
             }
         }
     }
@@ -283,37 +306,44 @@ public class Listeners implements Listener {
             QuakeArena arena = Utils.getQuakeArena(player.arena);
             if (arena.status == "started") { // Arena started
 
-                if (evt.getAction().equals(Action.RIGHT_CLICK_AIR) || evt.getAction().equals(Action.RIGHT_CLICK_BLOCK)) { // Right-clicking
+                if (evt.getAction()
+                    .equals(Action.RIGHT_CLICK_AIR) || evt.getAction()
+                    .equals(Action.RIGHT_CLICK_BLOCK)) { // Right-clicking
 
-                    if (p.getItemInHand().getType() == Material.WOOD_HOE) { // Using wooden hoe
+                    if (p.getItemInHand()
+                        .getType() == Material.WOOD_HOE) { // Using wooden hoe
                         if (main.woodShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "wood";
                         }
                     }
 
-                    if (p.getItemInHand().getType() == Material.STONE_HOE) { // Using wooden hoe
+                    if (p.getItemInHand()
+                        .getType() == Material.STONE_HOE) { // Using wooden hoe
                         if (main.stoneShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "stone";
                         }
                     }
 
-                    if (p.getItemInHand().getType() == Material.IRON_HOE) { // Using wooden hoe
+                    if (p.getItemInHand()
+                        .getType() == Material.IRON_HOE) { // Using wooden hoe
                         if (main.ironShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "iron";
                         }
                     }
 
-                    if (p.getItemInHand().getType() == Material.GOLD_HOE) { // Using wooden hoe
+                    if (p.getItemInHand()
+                        .getType() == Material.GOLD_HOE) { // Using wooden hoe
                         if (main.goldShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "gold";
                         }
                     }
 
-                    if (p.getItemInHand().getType() == Material.DIAMOND_HOE) { // Using wooden hoe
+                    if (p.getItemInHand()
+                        .getType() == Material.DIAMOND_HOE) { // Using wooden hoe
                         if (main.diamondShoot.tryUse(p)) { // Can use
                             shooted = true;
                             hoe = "diamond";
@@ -326,14 +356,16 @@ public class Listeners implements Listener {
 
                         // Get range
 
-                        int range = main.getConfig().getInt("railguns" + hoe + "range");
+                        int range = main.getConfig()
+                            .getInt("railguns." + hoe + ".range");
 
                         // EXP Animation
 
                         p.setExp(1);
 
                         // Play particles - like Quakecraft does
-                        for (Block loc: evt.getPlayer().getLineOfSight(null, 100)) {
+                        for (Block loc: evt.getPlayer()
+                            .getLineOfSight(null, 100)) {
                             try {
                                 playParticles(loc.getLocation());
                             } catch (Exception e) {
@@ -341,32 +373,53 @@ public class Listeners implements Listener {
                             }
                         }
 
-                        Location to = p.getTargetBlock(null, range).getLocation();
+                        Location to = p.getTargetBlock(null, range)
+                            .getLocation();
 
-                        LocationIterator blocksToAdd = new LocationIterator(p.getWorld(), p.getEyeLocation().toVector(), new Vector(to.getBlockX() - p.getEyeLocation().getBlockX(), to.getBlockY() - p.getEyeLocation().getBlockY(), to.getBlockZ() - p.getEyeLocation().getBlockZ()), 0.0D, (int) Math.floor(p.getEyeLocation().distanceSquared(to)));
+                        LocationIterator blocksToAdd = new LocationIterator(p.getWorld(), p.getEyeLocation()
+                            .toVector(), new Vector(to.getBlockX() - p.getEyeLocation()
+                                .getBlockX(), to.getBlockY() - p.getEyeLocation()
+                                .getBlockY(), to.getBlockZ() - p.getEyeLocation()
+                                .getBlockZ()), 0.0D, (int) Math.floor(p.getEyeLocation()
+                                .distanceSquared(to)));
                         Location blockToAdd = null;
 
                         int streak = 0;
 
+                        // TODO: hit multiple players
+
                         while (blocksToAdd.hasNext()) {
                             blockToAdd = blocksToAdd.next();
                             for (String name: arena.players) {
-                            	if (p.getName() != name) {
-                                Player p1 = main.getServer().getPlayer(name);
-                                if ((p1.getLocation().distance(blockToAdd) <= 1.5D) || (p1.getEyeLocation().distance(blockToAdd) <= 1.5D) && ! Utils.getQuakePlayer(p1.getName()).died) {
-                                    Utils.killPlayer(p.getName(), p1.getName());
-                                    hit = p1;
-                                    streak++;
+                                if (p.getName() != name && !Utils.getQuakePlayer(name)
+                                    .died) {
+                                    Player p1 = main.getServer()
+                                        .getPlayer(name);
+                                    if ((p1.getLocation()
+                                        .distance(blockToAdd) <= 1.5D) || (p1.getEyeLocation()
+                                        .distance(blockToAdd) <= 1.5D)) {
+                                        Utils.killPlayer(p.getName(), p1.getName());
+                                        hit = p1;
+                                        streak++;
+                                    }
                                 }
-                            	}
                             }
-                            if (blockToAdd.getBlock().getType().isSolid()) {
+                            if (blockToAdd.getBlock()
+                                .getType()
+                                .isSolid()) {
                                 break;
                             }
                         }
 
-                        if (streak >= 2) {
-                            Utils.broadcastPlayers(arena.name, streak + " KILLS");
+                        String streakMessage = "";
+
+                        if (streak == 2) streakMessage = Lang.DOUBLE_KILL.toString();
+                        if (streak == 3) streakMessage = Lang.TRIPLE_KILL.toString();
+                        if (streak == 4) streakMessage = Lang.QUADRUPLE_KILL.toString();
+                        if (streak > 4) streakMessage = Lang.UNBELIEVABLE_KILL.toString();
+
+                        if (streakMessage != "") {
+                            Utils.broadcastPlayers(arena.name, streakMessage);
                         }
                     }
 
@@ -375,29 +428,53 @@ public class Listeners implements Listener {
 
                     if (shooted) { // If shooted
                         // Play shoot sound
-                        Utils.playSound(p, "fireworks.blast", p.getLocation(), (float) Utils.randomInt(1, 100) / 100, 2F);
+                        Utils.playSound(p, "fireworks.blast", p.getLocation(), (float) Utils.randomInt(50, 100) / 100, 1F);
                         if (hit != null) { // Target found
                             // Play death sound
-                            Utils.playSound(p, "fireworks.twinkle", p.getLocation(), 1F, 2F);
+                            Utils.playSound(p, "fireworks.twinkle", p.getLocation(), 1F, 1F);
                         }
                         // Play explosion
-                        if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.enabled")) { // Explosion enabled
-                            if (main.getConfig().getBoolean("railguns." + hoe + ".explosion.only-when-hit")) { // Explosion only on targets
+                        if (main.getConfig()
+                            .getBoolean("railguns." + hoe + ".explosion.enabled")) { // Explosion enabled
+                            if (main.getConfig()
+                                .getBoolean("railguns." + hoe + ".explosion.only-when-hit")) { // Explosion only on targets
                                 if (hit != null) { // Target found
-                                    w.createExplosion(p.getTargetBlock(null, 100).getLocation().getX(), p.getTargetBlock(null, 100).getLocation().getY(), p.getTargetBlock(null, 100).getLocation().getZ(), (float) main.getConfig().getInt("railguns." + hoe + ".explosion.power"), false, false); // Play explosion
+                                    w.createExplosion(p.getTargetBlock(null, 100)
+                                        .getLocation()
+                                        .getX(), p.getTargetBlock(null, 100)
+                                        .getLocation()
+                                        .getY(), p.getTargetBlock(null, 100)
+                                        .getLocation()
+                                        .getZ(), (float) main.getConfig()
+                                        .getInt("railguns." + hoe + ".explosion.power"), false, false); // Play explosion
                                 }
                             } else {
-                                w.createExplosion(p.getTargetBlock(null, 100).getLocation().getX(), p.getTargetBlock(null, 100).getLocation().getY(), p.getTargetBlock(null, 100).getLocation().getZ(), (float) main.getConfig().getInt("railguns." + hoe + ".explosion.power"), false, false); // Play explosion
+                                w.createExplosion(p.getTargetBlock(null, 100)
+                                    .getLocation()
+                                    .getX(), p.getTargetBlock(null, 100)
+                                    .getLocation()
+                                    .getY(), p.getTargetBlock(null, 100)
+                                    .getLocation()
+                                    .getZ(), (float) main.getConfig()
+                                    .getInt("railguns." + hoe + ".explosion.power"), false, false); // Play explosion
                             }
                         }
                         // Play firework
-                        if (main.getConfig().getBoolean("railguns." + hoe + ".firework.enabled")) { // Firework enabled
+                        if (main.getConfig()
+                            .getBoolean("railguns." + hoe + ".firework.enabled")) { // Firework enabled
                             if (hit != null) {
                                 FireworkEffectPlayer fp = new FireworkEffectPlayer();
                                 try {
-                                    Color color = Utils.getColor(main.getConfig().getString("railguns." + hoe + ".firework.color").toUpperCase());
-                                    Type type = Utils.getType(main.getConfig().getString("railguns." + hoe + ".firework.type").toUpperCase());
-                                    fp.playFirework(hit.getWorld(), hit.getLocation(), FireworkEffect.builder().withColor(color).with(type).build());
+                                    Color color = Utils.getColor(main.getConfig()
+                                        .getString("railguns." + hoe + ".firework.color")
+                                        .toUpperCase());
+                                    Type type = Utils.getType(main.getConfig()
+                                        .getString("railguns." + hoe + ".firework.type")
+                                        .toUpperCase());
+                                    fp.playFirework(hit.getWorld(), hit.getLocation(), FireworkEffect.builder()
+                                        .withColor(color)
+                                        .with(type)
+                                        .build());
                                 } catch (IllegalArgumentException e) {
                                     e.printStackTrace();
                                 } catch (Exception e) {
@@ -412,51 +489,32 @@ public class Listeners implements Listener {
         }
     }
 
-    private boolean hasIntersection(Vector3D p1, Vector3D p2, Vector3D min, Vector3D max) {
-        final double epsilon = 0.0001f;
-
-        Vector3D d = p2.subtract(p1).multiply(0.5);
-        Vector3D e = max.subtract(min).multiply(0.5);
-        Vector3D c = p1.add(d).subtract(min.add(max).multiply(0.5));
-        Vector3D ad = d.abs();
-
-        if (Math.abs(c.x) > e.x + ad.x)
-            return false;
-        if (Math.abs(c.y) > e.y + ad.y)
-            return false;
-        if (Math.abs(c.z) > e.z + ad.z)
-            return false;
-
-        if (Math.abs(d.y * c.z - d.z * c.y) > e.y * ad.z + e.z * ad.y + epsilon)
-            return false;
-        if (Math.abs(d.z * c.x - d.x * c.z) > e.z * ad.x + e.x * ad.z + epsilon)
-            return false;
-        if (Math.abs(d.x * c.y - d.y * c.x) > e.x * ad.y + e.y * ad.x + epsilon)
-            return false;
-
-        return true;
-    }
-
     Random gen = new Random();
 
     private Object[] dataStore = new Object[5];
 
     public void playParticles(Location loc) throws Exception {
-        Firework fw = (Firework) loc.getWorld().spawn(loc, Firework.class);
-        if (dataStore[0] == null) dataStore[0] = getMethod(loc.getWorld().getClass(), "getHandle");
+        Firework fw = (Firework) loc.getWorld()
+            .spawn(loc, Firework.class);
+        if (dataStore[0] == null) dataStore[0] = getMethod(loc.getWorld()
+            .getClass(), "getHandle");
         if (dataStore[2] == null) dataStore[2] = getMethod(fw.getClass(), "getHandle");
-        dataStore[3] = ((Method) dataStore[0]).invoke(loc.getWorld(), (Object[]) null);
-        dataStore[4] = ((Method) dataStore[2]).invoke(fw, (Object[]) null);
+        dataStore[3] = ((Method) dataStore[0])
+            .invoke(loc.getWorld(), (Object[]) null);
+        dataStore[4] = ((Method) dataStore[2])
+            .invoke(fw, (Object[]) null);
         if (dataStore[1] == null) dataStore[1] = getMethod(dataStore[3].getClass(), "addParticle");
-        ((Method) dataStore[1]).invoke(dataStore[3], new Object[] {
-            "fireworksSpark", loc.getX(), loc.getY(), loc.getZ(), gen.nextGaussian() * 0.05D, -(loc.getZ() * 1.15D) * 0.5D, gen.nextGaussian() * 0.05D
-        });
+        ((Method) dataStore[1])
+            .invoke(dataStore[3], new Object[] {
+                "fireworksSpark", loc.getX(), loc.getY(), loc.getZ(), gen.nextGaussian() * 0.05D, -(loc.getZ() * 1.15D) * 0.5D, gen.nextGaussian() * 0.05D
+            });
         fw.remove();
     }
 
     private Method getMethod(Class <? > cl, String method) {
         for (Method m: cl.getMethods())
-            if (m.getName().equals(method)) return m;
+            if (m.getName()
+                .equals(method)) return m;
         return null;
     }
 

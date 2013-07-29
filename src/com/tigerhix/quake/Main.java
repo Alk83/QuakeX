@@ -14,10 +14,8 @@ import net.milkbowl.vault.economy.Economy;
 
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
-import org.bukkit.Material;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -32,6 +30,8 @@ public class Main extends JavaPlugin {
 	 * # /quake - Teleport you to main lobby
 	 * # /quake setmin [arena] [min] - Set minimum player requirement for arena
 	 * # /quake setmax [arena] [max] - Set maximum player requirement for arena
+	 * # /quake start [arena] - Force start an arena
+	 * # /quake stop [arena] - Force stop an arena
 	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one.
 	 * - Now keep inventory on death in matches
 	 * - Now player can't break/place blocks in matches
@@ -43,8 +43,11 @@ public class Main extends JavaPlugin {
 	 * match still starts
 	 * # Arena started, players leaves when only 1 player is left; match don't stop
 	 * # You can see other arena's scoreboard stats if you are playing
-	 * # No errors if you typed commands wrong.
-	 * # No notification if you leaved the game.
+	 * # No errors if you typed commands wrong
+	 * # No notification if you leaved the game
+	 * # Non-OP players can remove join signs
+	 * # If you leave the game when your exp bar not full, exp bar bugs
+	 * # If you use '/quake lobby' in game, you won't leave the arena
 	 */
 	
 	/*
@@ -57,6 +60,8 @@ public class Main extends JavaPlugin {
 	 * - Stop players from respawning all in the same area
 	 * - No damage from lava
 	 * - Must buy first
+	 * - Add sound to countdown
+	 * - Inventory toggle bug
 	 */
 
     public static Logger log;
@@ -235,6 +240,12 @@ public class Main extends JavaPlugin {
             if (!players.containsKey(p.getName())) {
                 players.put(p.getName(), new QuakePlayer(this, p));
                 // If player is not initialized
+                if (getConfig().get("players." + p.getName() + ".points") == null) {
+                	Utils.setPoints(p.getName(), 0);
+                }
+                if (Utils.getHoe(p.getName()) == null) {
+                	Utils.setHoe(p.getName(), "wood");
+                }
                 if (getConfig().get("players." + p.getName() + ".coins") == null) {
                 	Utils.setCoins(p.getName(), 100);
                 }
