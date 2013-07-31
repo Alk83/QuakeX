@@ -20,7 +20,7 @@ local.properties
 *.iml
 # Locally stored "Eclipse launch configurations"
 *.launch
-
+.classpath/
 # CDT-specific
 .cproject
 
