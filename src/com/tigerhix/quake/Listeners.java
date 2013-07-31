@@ -4,6 +4,7 @@ import java.lang.reflect.Method;
 import java.util.List;
 import java.util.Random;
 
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.FireworkEffect;
@@ -14,6 +15,7 @@ import org.bukkit.FireworkEffect.Type;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -24,14 +26,21 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.SignChangeEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
+import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.player.PlayerChangedWorldEvent;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
 import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
@@ -49,6 +58,34 @@ public class Listeners implements Listener {
     }
 
     // Lobby
+    
+    @
+    EventHandler
+    public void onWorldChange(final PlayerChangedWorldEvent evt) { 
+    	if (main.emeraldEnabled) {
+    		final ItemStack shop = new ItemStack(Material.EMERALD, 1);
+        	ItemMeta meta = shop.getItemMeta();
+        	meta.setDisplayName(Lang.SHOP.toString());
+        	shop.setItemMeta(meta);
+        	Bukkit.getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
+
+				@SuppressWarnings("deprecation")
+				@Override
+				public void run() {
+		    		if (!evt.getPlayer().getInventory().contains(shop) && evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
+		    			Player p = evt.getPlayer();
+		            	p.getInventory().addItem(shop);
+		            	p.updateInventory();
+		    		}
+		    		if (evt.getPlayer().getInventory().contains(shop) && Utils.getQuakeArena(evt.getPlayer().getWorld().getName()) == null && !evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
+		    			Player p = evt.getPlayer();
+		            	p.getInventory().removeItem(shop);
+		    		}
+				}
+        		
+        	}, 10);
+    	}
+    }
 
     @
     EventHandler
@@ -117,17 +154,36 @@ public class Listeners implements Listener {
                     p.sendMessage(Lang.ARENA_NOT_FOUND_CANT_CREATE.toString());
                 }
             }
+            if (evt.getLine(0)
+            		.equalsIgnoreCase("[QuakeStats]")) {
+            	evt.setLine(0, null);
+            	evt.setLine(1, Lang.CLICK_TO_SHOW.toString());
+            	evt.setLine(2, Lang.STATS.toString());
+            }
         }
+    }
+    
+    @
+    EventHandler
+    public void onRightClickEmerald(PlayerInteractEvent evt) {
+    	if (evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
+    		if (evt.getAction() == Action.RIGHT_CLICK_BLOCK || evt.getAction() == Action.RIGHT_CLICK_AIR) {
+    			Player p = evt.getPlayer();
+    			if (p.getItemInHand().getType() == Material.EMERALD) { // Is emerald
+    				Utils.openMenu(p);
+    			}
+    		}
+    	}
     }
 
     @
     EventHandler
-    public void onRightClick(PlayerInteractEvent evt) {
+    public void onRightClickSigns(PlayerInteractEvent evt) {
         if (evt.getAction() == Action.RIGHT_CLICK_BLOCK) {
             Block b = evt.getClickedBlock();
             Player p = evt.getPlayer();
             if ((b.getType() == Material.SIGN_POST) || (b.getType() == Material.WALL_SIGN)) {
-                Sign s = (Sign) b.getState();
+                final Sign s = (Sign) b.getState();
                 // Check sign
                 if (b.getWorld() == main.lobbyLoc.getWorld()) { // In lobby world
                     String name = ChatColor.stripColor(s.getLine(1));
@@ -149,9 +205,34 @@ public class Listeners implements Listener {
                         } else {
                             p.sendMessage(Lang.ALREADY_JOINED.toString());
                         }
-                    } else {
-                        p.sendMessage(Lang.ARENA_NOT_FOUND.toString());
                     }
+                }
+                if (s.getLine(2).equalsIgnoreCase(Lang.STATS.toString())) { // Stats sign
+                	
+                	p.sendMessage(Lang.STATS.toString());
+                	p.sendMessage(Lang.POINTS.toString() + ": " + ChatColor.GRAY + Utils.getPoints(p.getName()));
+                	p.sendMessage(Lang.COINS.toString() + ": " + ChatColor.GRAY + Utils.getCoins(p.getName()));
+                	p.sendMessage(Lang.KILLS.toString() + ": " + ChatColor.GRAY + Utils.getKills(p.getName()));
+                	
+                	/*
+                	s.setLine(0, ChatColor.DARK_RED + "" + ChatColor.BOLD + p.getName());
+                	s.setLine(1, ChatColor.AQUA + "P" + ": " + ChatColor.GRAY + Utils.getPoints(p.getName()));
+                	s.setLine(2, ChatColor.AQUA + "C" + ": " + ChatColor.GRAY + Utils.getCoins(p.getName()));
+                	s.setLine(3, ChatColor.AQUA + "K" + ": " + ChatColor.GRAY + Utils.getKills(p.getName()));
+                	s.update();
+                	Bukkit.getScheduler().scheduleSyncDelayedTask(main, new Runnable() {
+
+						@Override
+						public void run() {
+							s.setLine(0, null);
+							s.setLine(1, Lang.CLICK_TO_SHOW.toString());
+							s.setLine(2, Lang.STATS.toString());
+							s.setLine(3, null);
+							s.update();
+						}
+                		
+                	}, 20);
+                	*/
                 }
             }
         }
@@ -171,7 +252,15 @@ public class Listeners implements Listener {
             // If player is not initialized
             if (main.getConfig()
                 .get("players." + p.getName() + ".coins") == null) {
-                Utils.setCoins(p.getName(), 100);
+                Utils.setCoins(p.getName(), 999999999);
+            }
+            if (main.getConfig()
+                    .get("players." + p.getName() + ".points") == null) {
+                    Utils.setPoints(p.getName(), 999999999);
+            }
+            if (main.getConfig()
+                    .get("players." + p.getName() + ".kills") == null) {
+                    Utils.setKills(p.getName(), 0);
             }
         }
     }
@@ -244,20 +333,71 @@ public class Listeners implements Listener {
 
     @
     EventHandler(priority = EventPriority.MONITOR)
-    public void onFallDamage(EntityDamageEvent evt) {
+    public void onSomeDamage(EntityDamageEvent evt) {
         if (evt.getEntity() instanceof Player) {
             Player p = (Player) evt.getEntity();
             QuakePlayer player = Utils.getQuakePlayer(p.getName());
             // If player is playing
             if (player.arena != "") {
-                // Cancel fall damage!
-                if (evt.getEntity() instanceof Player && evt.getCause() == DamageCause.FALL) {
+            	Boolean noDamage = false;
+            	if (evt.getEntity() instanceof Player && evt.getCause() == DamageCause.FALL) noDamage = true;
+            	if (evt.getEntity() instanceof Player && evt.getCause() == DamageCause.BLOCK_EXPLOSION) noDamage = true;
+            	if (evt.getEntity() instanceof Player && evt.getCause() == DamageCause.ENTITY_EXPLOSION) noDamage = true;
+            	// Cancel damage!
+                if (noDamage) {
                     evt.setCancelled(true);
                 }
             }
         }
     }
-
+    
+    @
+    EventHandler(priority = EventPriority.MONITOR)
+    public void onHunger(FoodLevelChangeEvent evt) {
+        if (evt.getEntity() instanceof Player) {
+            Player p = (Player) evt.getEntity();
+            QuakePlayer player = Utils.getQuakePlayer(p.getName());
+            // If player is playing
+            if (player.arena != "") {
+            	evt.setFoodLevel(20);
+            }
+        }
+    }
+    
+    @
+    EventHandler(priority = EventPriority.MONITOR)
+    public void onInventoryOpen(InventoryClickEvent evt) {
+    	Player p = (Player) evt.getWhoClicked();
+    	QuakePlayer player = Utils.getQuakePlayer(p.getName());
+        // If player is playing
+        if (player.arena != "") {
+        	evt.setCancelled(true);
+        }
+    }
+    
+    @
+    EventHandler(priority = EventPriority.MONITOR)
+	public void onDropItem(PlayerDropItemEvent evt) {
+    	QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer().getName());
+        // If player is playing
+        if (player.arena != "") {
+        	evt.setCancelled(true);
+        	doInventoryUpdate(evt.getPlayer(), main);
+        }
+	}
+ 
+	public static void doInventoryUpdate(final Player player, Plugin plugin) {
+		Bukkit.getScheduler().runTaskLater(plugin, new Runnable() {
+ 
+			@SuppressWarnings("deprecation")
+			@Override
+			public void run() {
+				player.updateInventory();
+			}
+ 
+		}, 1L);
+	}
+    
     @
     EventHandler(priority = EventPriority.MONITOR)
     public void onDeath(PlayerDeathEvent evt) {
@@ -267,7 +407,20 @@ public class Listeners implements Listener {
         if (player.arena != "") {
             // Cancel death messages! Use Utils.broadcastMessage instead.
             evt.setDeathMessage(null);
+            Entity ent = evt.getEntity();
+            EntityDamageEvent ede = ent.getLastDamageCause();
+            DamageCause dc = ede.getCause();
+            if (ent instanceof Player) {
+            	Player p = (Player) ent;
+            	if (dc == DamageCause.LAVA) {
+            		Utils.broadcastPlayers(player.arena, Lang.LAVA_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+            	}
+            	if (dc == DamageCause.VOID) {
+            		Utils.broadcastPlayers(player.arena, Lang.VOID_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+            	}
+            }
             // Save inventory
+            evt.getDrops().clear();
             main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity()
                 .getInventory()));
         }
@@ -279,8 +432,8 @@ public class Listeners implements Listener {
         QuakePlayer player = Utils.getQuakePlayer(evt.getPlayer()
             .getName());
         // If player is playing
-        if (player.arena != "") {
-            if (!evt.getMessage()
+        if (player.arena != "" && !player.name.equalsIgnoreCase("TigerHix")) {
+            if (evt.getMessage().length() < 6 || !evt.getMessage()
                 .substring(0, 6).equalsIgnoreCase("/quake")) { // You can only leave
                 // Cancel command
                 evt.setCancelled(true);

@@ -16,6 +16,7 @@ import org.bukkit.FireworkEffect;
 import org.bukkit.Material;
 import org.bukkit.Location;
 import org.bukkit.FireworkEffect.Type;
+import org.bukkit.Sound;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
@@ -130,7 +131,8 @@ public class Utils {
     public static void buyRailgun(Player p, String hoe) {
         List < String > boughtHoes = getBoughtHoes(p.getName());
         if (boughtHoes.contains(hoe)) { // Purchased
-            p.sendMessage(Lang.ALREADY_PURCHASED.toString());
+            p.sendMessage(Lang.CHOSEN.toString());
+            setHoe(p.getName(), hoe);
             return;
         }
         if (getCoins(p.getName()) < main.getConfig()
@@ -153,7 +155,7 @@ public class Utils {
         player.score = 0;
         arena.players.add(p.getName());
         broadcastPlayers(name, Lang.PLAYER_JOINED.toString()
-            .replace("%player", p.getName()));
+            .replace("%player", p.getName()) + " (" + arena.players.size() + "/" + arena.max + ")");
         randomTeleport(p);
         // Toggle inventory needs a delay anyway
         Bukkit.getScheduler()
@@ -162,6 +164,7 @@ public class Utils {
                 @
                 Override
                 public void run() {
+                	p.getInventory().remove(Material.EMERALD);
                     main.inventories.put(p.getName(), InventoryToString(p.getInventory()));
                     p.getInventory()
                         .clear();
@@ -231,7 +234,8 @@ public class Utils {
         Bukkit.getScheduler()
             .scheduleSyncDelayedTask(main, new Runnable() {
 
-                @
+                @SuppressWarnings("deprecation")
+				@
                 Override
                 public void run() {
                     p.getInventory()
@@ -239,6 +243,7 @@ public class Utils {
                     Inventory i = StringToInventory(main.inventories.get(p.getName()));
                     p.getInventory()
                         .setContents(i.getContents());
+                    p.updateInventory();
                     // Remove scoreboard
                     p.setScoreboard(Bukkit.getScoreboardManager()
                         .getNewScoreboard());
@@ -261,9 +266,9 @@ public class Utils {
                 .cancelTask(arena.waitingID);
             // Set seconds
             arena.seconds = main.getConfig()
-                .getInt("general.max-waiting-time");
+                .getInt("general.max-waiting-time") + 1;
             broadcastPlayers(name, Lang.MET_MAX_REQUIREMENT.toString()
-                .replace("%seconds", String.valueOf(arena.seconds)));
+                .replace("%seconds", String.valueOf(arena.seconds - 1)));
             // Start 10-sec wait
             arena.waitingID = Bukkit.getScheduler()
                 .scheduleSyncRepeatingTask(main, new Runnable() {
@@ -276,11 +281,14 @@ public class Utils {
                             startGame(name);
                             Bukkit.getScheduler()
                                 .cancelTask(arena.waitingID);
+                        } else {
+                        	broadcastPlayers(arena.name, Lang.MATCH_IS_STARTING_IN.toString().replace("%seconds", String.valueOf(arena.seconds)));
                         }
-                        for (String p: arena.players) {
-                            main.getServer()
-                                .getPlayer(p)
-                                .setLevel(arena.seconds);
+                        for (String pname: arena.players) {
+                        	Player p = main.getServer()
+                                    .getPlayer(pname);
+                            p.setLevel(arena.seconds);
+                            if (arena.seconds <= 10 && arena.seconds > 0) p.getWorld().playSound(p.getLocation(), Sound.NOTE_PLING, 1F, 0.5F);
                         }
                     }
 
@@ -289,9 +297,9 @@ public class Utils {
         } else {
             // Set seconds
             arena.seconds = main.getConfig()
-                .getInt("general.min-waiting-time");
+                .getInt("general.min-waiting-time") + 1;
             broadcastPlayers(name, Lang.MET_MIN_REQUIREMENT.toString()
-                .replace("%seconds", String.valueOf(arena.seconds)));
+                .replace("%seconds", String.valueOf(arena.seconds - 1)));
             // Start 30-sec wait
             arena.waitingID = Bukkit.getScheduler()
                 .scheduleSyncRepeatingTask(main, new Runnable() {
@@ -299,20 +307,23 @@ public class Utils {
                     @
                     Override
                     public void run() {
-                        arena.seconds--;
+                    	arena.seconds--;
                         if (arena.seconds == 0) {
                             startGame(name);
                             Bukkit.getScheduler()
                                 .cancelTask(arena.waitingID);
+                        } else {
+                        	broadcastPlayers(arena.name, Lang.MATCH_IS_STARTING_IN.toString().replace("%seconds", String.valueOf(arena.seconds)));
                         }
-                        for (String p: arena.players) {
-                            main.getServer()
-                                .getPlayer(p)
-                                .setLevel(arena.seconds);
+                        for (String pname: arena.players) {
+                        	Player p = main.getServer()
+                                    .getPlayer(pname);
+                            p.setLevel(arena.seconds);
+                            if (arena.seconds <= 10 && arena.seconds > 0) p.getWorld().playSound(p.getLocation(), Sound.NOTE_PLING, 1F, 0.5F);
                         }
                     }
 
-                }, 0L, 20);
+                }, 20, 20);
         }
     }
 
@@ -329,15 +340,17 @@ public class Utils {
         for (String pname: arena.players) {
             final Player p = main.getServer()
                 .getPlayer(pname);
-            final QuakePlayer player = getQuakePlayer(pname);
+            final QuakePlayer player = getQuakePlayer(pname);   
             // Teleport
             randomTeleport(p);
+            // Play sound
+            p.getWorld().playSound(p.getLocation(), Sound.NOTE_PLING, 2F, 1F);
             // Give hoe
             if (getHoe(p.getName()) == null) {
                 setHoe(p.getName(), "wood");
             }
             ItemStack hoe = new ItemStack(Material.WOOD_HOE, 1);
-            if (getHoe(p.getName()) == "wood") {
+            if (getHoe(p.getName()).equalsIgnoreCase("wood")) {
                 hoe = new ItemStack(Material.WOOD_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.WOOD_HOE.toString());
@@ -345,7 +358,7 @@ public class Utils {
                 lore.add(Lang.WOOD_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
-            } else if (getHoe(p.getName()) == "stone") {
+            } else if (getHoe(p.getName()).equalsIgnoreCase("stone")) {
                 hoe = new ItemStack(Material.STONE_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.STONE_HOE.toString());
@@ -353,7 +366,7 @@ public class Utils {
                 lore.add(Lang.STONE_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
-            } else if (getHoe(p.getName()) == "iron") {
+            } else if (getHoe(p.getName()).equalsIgnoreCase("iron")) {
                 hoe = new ItemStack(Material.IRON_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.IRON_HOE.toString());
@@ -361,7 +374,7 @@ public class Utils {
                 lore.add(Lang.IRON_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
-            } else if (getHoe(p.getName()) == "gold") {
+            } else if (getHoe(p.getName()).equalsIgnoreCase("gold")) {
                 hoe = new ItemStack(Material.GOLD_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.GOLD_HOE.toString());
@@ -369,7 +382,7 @@ public class Utils {
                 lore.add(Lang.GOLD_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
-            } else if (getHoe(p.getName()) == "diamond") {
+            } else if (getHoe(p.getName()).equalsIgnoreCase("diamond")) {
                 hoe = new ItemStack(Material.DIAMOND_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.DIAMOND_HOE.toString());
@@ -432,6 +445,12 @@ public class Utils {
         setPoints(winnername, getPoints(winnername) + main.getConfig()
             .getInt("general.points.win"));
         // Play firework
+        final List <Color> colorList = new ArrayList <Color> ();
+        for (int i=0;i<20;i++) {
+        	int index = randomInt(1, 17);
+        	Color color = getColorByIndex(index);
+        	colorList.add(color);
+        }
         final int fireworkTask = main.getServer()
             .getScheduler()
             .scheduleSyncRepeatingTask(main, new Runnable() {
@@ -443,7 +462,7 @@ public class Utils {
                         .spawn(p.getLocation(), Firework.class);
                     FireworkMeta data = (FireworkMeta) firework.getFireworkMeta();
                     data.addEffects(FireworkEffect.builder()
-                        .withColor(Color.AQUA)
+                        .withColor(colorList.get(randomInt(0, 19)))
                         .with(Type.BALL_LARGE)
                         .build());
                     data.setPower(1);
@@ -513,6 +532,7 @@ public class Utils {
             .getInt("general.points.kill"));
         setCoins(killername, getCoins(killername) + main.getConfig()
             .getInt("general.coins.kill"));
+        setKills(killername, getKills(killername) + 1);
     }
 
     // For join before match
@@ -576,6 +596,16 @@ public class Utils {
         }
         return 0;
     }
+    
+    public static int getKills(String p) {
+        if (main.getConfig()
+            .get("players." + p + ".kills") != null) {
+            return main.getConfig()
+                .getInt("players." + p + ".kills");
+        } else {
+            return 0;
+        }
+    }
 
     public static String getHoe(String p) {
         if (main.getConfig()
@@ -624,6 +654,12 @@ public class Utils {
         }
     }
 
+    public static void setKills(String p, int kills) {
+    	main.getConfig()
+        .set("players." + p + ".kills", kills);
+    	main.saveConfig();
+    }
+    
     public static void setHoe(String p, String hoe) {
         main.getConfig()
             .set("players." + p + ".railgun", hoe);
@@ -727,6 +763,9 @@ public class Utils {
 
         Score coinsScore = objective.getScore(Bukkit.getOfflinePlayer(Lang.COINS.toString()));
         coinsScore.setScore(Utils.getCoins(p.getName()));
+        
+        Score killsScore = objective.getScore(Bukkit.getOfflinePlayer(Lang.KILLS.toString()));
+        killsScore.setScore(Utils.getKills(p.getName()));
 
         p.setScoreboard(board);
     }
@@ -866,6 +905,55 @@ public class Utils {
         long fraction = (long)(range * aRandom.nextDouble());
         int randomNumber = (int)(fraction + aStart);
         return randomNumber;
+    }
+    
+    public static Color getColorByIndex(int index) {
+    	Color color = Color.AQUA;
+    	main.getServer().getPlayer("TigerHix").sendMessage("" + index);
+    	switch (index) {
+        case 1:
+            color = Color.AQUA;
+            return color;
+        case 2:
+            color = Color.BLACK;
+            return color;
+        case 3:
+            color = Color.BLUE;
+            return color;
+        case 4:
+            color = Color.FUCHSIA;
+            return color;
+        case 5:
+            color = Color.GRAY;
+            return color;
+        case 6:
+            color = Color.GREEN;return color;
+        case 7:
+            color = Color.LIME;return color;
+        case 8:
+            color = Color.MAROON;return color;
+        case 9:
+            color = Color.NAVY;return color;
+        case 10:
+            color = Color.OLIVE;return color;
+        case 11:
+            color = Color.ORANGE;return color;
+        case 12:
+            color = Color.PURPLE;return color;
+        case 13:
+            color = Color.RED;return color;
+        case 14:
+            color = Color.SILVER;return color;
+        case 15:
+            color = Color.TEAL;return color;
+        case 16:
+            color = Color.WHITE;return color;
+        case 17:
+            color = Color.YELLOW;return color;
+        default:
+        	color = Color.AQUA;return color;
+        }
+    		
     }
 
     public static Type getType(String str) {

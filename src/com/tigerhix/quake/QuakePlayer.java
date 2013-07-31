@@ -15,7 +15,7 @@ public class QuakePlayer {
     String arena;
     int score;
     Boolean died;
- 
+    
     public QuakePlayer(Main main, Player p) {
     	this.main = main;
     	// Setup stats

@@ -23,19 +23,23 @@ import org.bukkit.plugin.java.JavaPlugin;
 public class Main extends JavaPlugin {
 	
 	/*
-	 * CHANGELOG
+	 * CHANGELOG:
 	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
 	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use points from Vault to buy things.
+	 * - Add emerald shop; can be enabled in config.yml
+	 * - Add kills count on stats
 	 * - Add new commands:
 	 * # /quake - Teleport you to main lobby
 	 * # /quake setmin [arena] [min] - Set minimum player requirement for arena
-	 * # /quake setmax [arena] [max] - Set maximum player requirement for arena
+	 * # /quake setmax [arena] [max] - Set msaximum player requirement for arena
 	 * # /quake start [arena] - Force start an arena
 	 * # /quake stop [arena] - Force stop an arena
+	 * - Add sounds for countdown when lesser than 10 seconds
 	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one.
 	 * - Now keep inventory on death in matches
 	 * - Now player can't break/place blocks in matches
 	 * - Now player can't use commands in arenas except /quake leave
+	 * - Now player died because of lava or void will have corresponding death messages
 	 * - Fix bugs:
 	 * # Railgun gave to players don't have a custom name
 	 * # Arena meets the minimum player requirement and ready to start; 
@@ -53,15 +57,13 @@ public class Main extends JavaPlugin {
 	/*
 	 * TODO:
 	 * - VIP rank
-	 * - Buy & use railguns
 	 * - Hats and kits
 	 * - Permissions
 	 * - Regioned arena stats
 	 * - Stop players from respawning all in the same area
-	 * - No damage from lava
 	 * - Must buy first
-	 * - Add sound to countdown
 	 * - Inventory toggle bug
+	 * - Player leave bug
 	 */
 
     public static Logger log;
@@ -76,6 +78,7 @@ public class Main extends JavaPlugin {
     
     public Boolean statsEnabled;
     public Boolean vaultEnabled = false;
+    public Boolean emeraldEnabled = false;
     
     public Location lobbyLoc;
 
@@ -102,9 +105,15 @@ public class Main extends JavaPlugin {
 		    		getLogger().info("Lobby spawn set!");
 		    		String stringLoc = getConfig().getString("general.lobby.spawn");
 		    		lobbyLoc = Utils.stringToLocation(stringLoc, false);
+		    		if (getConfig().getBoolean("general.shop.emerald")) {
+		    			emeraldEnabled = true;
+		    		}
 		    	} else {
 		    		getLogger().info("Lobby spawn not found in config.yml. Automatically set to the main spawn.");
 		    		lobbyLoc = getServer().getWorlds().get(0).getSpawnLocation();
+		    		if (getConfig().getBoolean("general.shop.emerald")) {
+		    			getServer().getLogger().log(Level.WARNING, "Plugin WILL NOT give emerald shop to players; lobby spawn not set. Use /quake setlobby to set one first.");
+		    		}
 		    	}
 				// Set task for signs
 		        List < String > signs = getConfig().getStringList("general.lobby.signs");
@@ -241,13 +250,16 @@ public class Main extends JavaPlugin {
                 players.put(p.getName(), new QuakePlayer(this, p));
                 // If player is not initialized
                 if (getConfig().get("players." + p.getName() + ".points") == null) {
-                	Utils.setPoints(p.getName(), 0);
+                	Utils.setPoints(p.getName(), 999999999);
                 }
                 if (Utils.getHoe(p.getName()) == null) {
                 	Utils.setHoe(p.getName(), "wood");
                 }
                 if (getConfig().get("players." + p.getName() + ".coins") == null) {
-                	Utils.setCoins(p.getName(), 100);
+                	Utils.setCoins(p.getName(), 999999999);
+                }
+                if (getConfig().get("players." + p.getName() + ".kills") == null) {
+                	Utils.setKills(p.getName(), 0);
                 }
             }
         }

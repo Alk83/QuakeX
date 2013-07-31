@@ -16,6 +16,9 @@ general:
   # Require a lobby first. Use '/quake setlobby' to set one.
   stats:
     enabled: false
+  shop:
+    enabled: true
+    emerald: false
   # Player got this score in match wins
   winning-points: 25
   # Waiting time before match starts when amount of players meet minimum/maximum requirement of that arena

@@ -13,17 +13,19 @@ import org.bukkit.configuration.file.YamlConfiguration;
 
 public enum Lang {
    
-    STATS("stats", "Stats"),
-    LEADERBOARD("leaderboard", "Leaderboard"),
-    POINTS("points", "Points"),
-    COINS("coins", "Coins"),
-    KILLS("kills", "Kills"),
+    STATS("stats", "&4&lStats"),
+    LEADERBOARD("leaderboard", "&4&lLeaderboard"),
+    POINTS("points", "&bPoints"),
+    COINS("coins", "&bCoins"),
+    KILLS("kills", "&bKills"),
+    CLICK_TO_SHOW("click-to-show", "Click to show"),
     
     JOIN("join", "Join"),
     FULL("full", "Full"),
     IN_PROGRESS("in-progress", "In progress"),
     
-    BUY_MENU("buy-menu", "Buy menu"),
+    BUY_MENU("buy-menu", "Quake shop"),
+    SHOP("shop", "Shop"),
     
     WOOD_HOE("wood-railgun", "Wood railgun"),
     STONE_HOE("stone-railgun", "Stone railgun"),
@@ -52,10 +54,13 @@ public enum Lang {
     PLAYER_JOINED("player-joined", "&7 &b%player &7joined the game."),
     PLAYER_LEAVED("player-leaved", "&7 &b%player &7left the game."),
     PLAYER_KILLED_PLAYER("player-killed-player", "&7 &b%killer &7gibbed &b%killed&7!"),
+    LAVA_KILLED_PLAYER("lava-killed-player", "&7 &b%killed &7tried to swim in lava!"),
+    VOID_KILLED_PLAYER("void-killed-player", "&7 &b%killed &7fell into void!"),
     PLAYER_WON("player-won", "&7 &b%player &7won the game!"),
     
     MATCH_STARTED("match-started", "&7 Match started! Right click your railgun to instant-kill others!"),
     MATCH_ENDED("match-ended", "&7 Match ended!"),
+    MATCH_IS_STARTING_IN("match-is-starting-in", "&7 Match starts in %seconds seconds!"),
     
     MET_MIN_REQUIREMENT("met-min-requirement", "&7 Met minimum player requirement! Match starts in %seconds seconds.."),
     MET_MAX_REQUIREMENT("met-max-requirement", "&7 Met maximum player requirement! Match starts in %seconds seconds.."),
@@ -67,8 +72,8 @@ public enum Lang {
     SHOP_PRICE("shop-price", "&ePrice: "),
     SHOP_PRICE_FORMAT("shop-price-format", "&b$%price"),
     
-    PURCHASED("purchased", "&7 Successfully purchased."),
-    ALREADY_PURCHASED("already-purchased", "&c You already have this item!"),
+    PURCHASED("purchased", "&7 Successfully purchased and auto-selected. You will be able to use it in matches now."),
+    CHOSEN("chosen", "&7 Successfully chosen this railgun."),
     NOT_ENOUGH_COINS("not-enough-coins", "&c You don't have enough coins!"),
     
     DOUBLE_KILL("double-kill", "&e Double kill!"),
@@ -84,7 +89,8 @@ public enum Lang {
     SPAWN_SET("spawn-set", "&7 Spawn set."),
     LOBBY_SET("lobby-set", "&7 Lobby set. Now you can put join signs in this world."),
     STATS_CHANGED("stats-changed", "&7 Stats changed."),
-    WRONG_COMMAND("wrong-command", "&c Unknown command.");
+    WRONG_COMMAND("wrong-command", "&c Unknown command or wrong arguments. Type '/quake help' for help."),
+    DISABLED_COMMAND("disabled-command", "&c This command is disabled in matches.");
 
     private String path;
     private String def;
@@ -110,6 +116,8 @@ public enum Lang {
     	words.add("kills");
     	words.add("join");
     	words.add("full");
+    	words.add("shop");
+    	words.add("click-to-show");
     	words.add("in-progress");
     	words.add("buy-menu");
     	words.add("wood-railgun");
