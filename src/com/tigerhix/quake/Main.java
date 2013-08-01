@@ -19,10 +19,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+
 public class Main extends JavaPlugin {
 
 	/*
-	 * CHANGELOG:
+     * CHANGELOG:
 	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
 	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use points from Vault to buy things.
 	 * - Add emerald shop; can be enabled in config.yml
