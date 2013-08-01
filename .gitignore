@@ -23,6 +23,7 @@ local.properties
 .classpath
 # CDT-specific
 .cproject
+*.project
 
 # PDT-specific
 .buildpath
