@@ -66,6 +66,7 @@ public class Listeners implements Listener {
                     if (evt.getPlayer().getInventory().contains(shop) && Utils.getQuakeArena(evt.getPlayer().getWorld().getName()) == null && !evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
                         Player p = evt.getPlayer();
                         p.getInventory().removeItem(shop);
+                        p.updateInventory();
                     }
                 }
 
@@ -259,6 +260,7 @@ public class Listeners implements Listener {
         QuakePlayer player = Utils.getQuakePlayer(p.getName());
 
         if (player.arena != "") { // Playing
+            //
             // TODO: Returnable
             Utils.leaveGame(p);
         }
@@ -315,6 +317,7 @@ public class Listeners implements Listener {
             evt.getPlayer()
                     .getInventory()
                     .setContents(i.getContents());
+            evt.getPlayer().updateInventory();
         }
     }
 
@@ -396,21 +399,26 @@ public class Listeners implements Listener {
             // Cancel death messages! Use Utils.broadcastMessage instead.
             evt.setDeathMessage(null);
             Entity ent = evt.getEntity();
-            EntityDamageEvent ede = ent.getLastDamageCause();
-            DamageCause dc = ede.getCause();
-            if (ent instanceof Player) {
-                Player p = (Player) ent;
-                if (dc == DamageCause.LAVA) {
-                    Utils.broadcastPlayers(player.arena, Lang.LAVA_KILLED_PLAYER.toString().replace("%killed", p.getName()));
-                }
-                if (dc == DamageCause.VOID) {
-                    Utils.broadcastPlayers(player.arena, Lang.VOID_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+            if (ent.getLastDamageCause() != null && ent.getLastDamageCause().getCause() != null) {
+                EntityDamageEvent ede = ent.getLastDamageCause();
+                DamageCause dc = ede.getCause();
+                if (ent instanceof Player) {
+                    Player p = (Player) ent;
+                    if (dc != null) {
+                        if (dc == DamageCause.LAVA) {
+                            Utils.broadcastPlayers(player.arena, Lang.LAVA_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+                        }
+                        if (dc == DamageCause.VOID) {
+                            Utils.broadcastPlayers(player.arena, Lang.VOID_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+                        }
+                    }
                 }
             }
+
             // Save inventory
-            evt.getDrops().clear();
             main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity()
                     .getInventory()));
+            evt.getDrops().clear();
         }
     }
 

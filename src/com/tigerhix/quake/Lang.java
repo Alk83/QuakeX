@@ -150,7 +150,7 @@ public enum Lang {
     public String toString() {
         if (words.contains(this.path))
             return ChatColor.translateAlternateColorCodes('&', LANG.getString(this.path, def));
-        return "\ufffd\ufffde[\ufffd\ufffdb\ufffd\ufffdlQuake\ufffd\ufffdc\ufffd\ufffdlDM\ufffd\ufffdr\ufffd\ufffde]" + ChatColor.translateAlternateColorCodes('&', LANG.getString(this.path, def));
+        return ChatColor.translateAlternateColorCodes('&', "&e[&b&lQuake&c&lDM&r&e]" + LANG.getString(this.path, def));
     }
 
     /**

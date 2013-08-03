@@ -64,6 +64,8 @@ public class Main extends JavaPlugin {
 	 * - Must buy first
 	 * - Inventory toggle bug
 	 * - Player leave bug
+	 * - Arena limit time
+	 * - Leave game, set scoreboard
 	 */
 
     public static Logger log;

@@ -156,6 +156,7 @@ public class Utils {
                         main.inventories.put(p.getName(), InventoryToString(p.getInventory()));
                         p.getInventory()
                                 .clear();
+                        p.updateInventory();
                     }
 
                 }, 10);
@@ -270,8 +271,10 @@ public class Utils {
                                 Bukkit.getScheduler()
                                         .cancelTask(arena.waitingID);
                             } else {
+                                if (arena.seconds <= 10) {
                                 broadcastPlayers(arena.name, Lang.MATCH_IS_STARTING_IN.toString().replace("%seconds", String.valueOf(arena.seconds)));
-                            }
+                                }
+                                }
                             for (String pname : arena.players) {
                                 Player p = main.getServer()
                                         .getPlayer(pname);
@@ -302,7 +305,9 @@ public class Utils {
                                 Bukkit.getScheduler()
                                         .cancelTask(arena.waitingID);
                             } else {
+                                if (arena.seconds <= 10) {
                                 broadcastPlayers(arena.name, Lang.MATCH_IS_STARTING_IN.toString().replace("%seconds", String.valueOf(arena.seconds)));
+                                }
                             }
                             for (String pname : arena.players) {
                                 Player p = main.getServer()
@@ -391,6 +396,7 @@ public class Utils {
             }
             p.getInventory()
                     .addItem(hoe);
+            p.updateInventory();
             // Potion effects
             setPotionEffects(p);
             // Set scoreboard
@@ -678,7 +684,7 @@ public class Utils {
                     public void run() {
                         for (Player p : Bukkit.getOnlinePlayers()) {
                             QuakePlayer player = getQuakePlayer(p.getName());
-                            if (player.arena == "") {
+                            if (player != null && player.arena == "") {
                                 if (p.getWorld() == main.lobbyLoc.getWorld() && main.getConfig()
                                         .getBoolean("general.stats.enabled")) {
                                     // Player is in lobby
@@ -899,7 +905,6 @@ public class Utils {
 
     public static Color getColorByIndex(int index) {
         Color color = Color.AQUA;
-        main.getServer().getPlayer("TigerHix").sendMessage("" + index);
         switch (index) {
             case 1:
                 color = Color.AQUA;
