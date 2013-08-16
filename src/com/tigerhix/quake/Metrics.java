@@ -54,6 +54,7 @@ import java.util.UUID;
 import java.util.logging.Level;
 import java.util.zip.GZIPOutputStream;
 
+@SuppressWarnings("JavaDoc")
 public class Metrics {
 
     /**
@@ -616,6 +617,7 @@ public class Metrics {
     /**
      * Represents a custom graph on the website
      */
+    @SuppressWarnings("Convert2Diamond")
     public static class Graph {
 
         /**
