@@ -5,7 +5,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
-import org.bukkit.plugin.PluginManager;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -13,6 +12,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -20,27 +20,41 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 
+@SuppressWarnings("ResultOfMethodCallIgnored")
 public class Main extends JavaPlugin {
 
 	/*
      * CHANGELOG:
+     * - Remove lobby-world setting. Replaced with /quake setlobby, a better solution.
 	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
-	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use points from Vault to buy things.
+	 * - Add VIP support. If an arena needs one more player to reach its max (like 7/8), only VIP can join it
+	 * - Add Vault-based economy system; if you enable it, coins will be removed and player use money from Vault to buy things
 	 * - Add emerald shop; can be enabled in config.yml
 	 * - Add kills count on stats
 	 * - Add new commands:
-	 * # /quake - Teleport you to main lobby
+	 * # /quake - Show info about this plugin
+	 * # /quake lobby - Teleport you to main lobby
+	 * # /quake buy - Open Quake shop
+	 * # /quake stats - Show Quake stats
+	 * # /quake vip - VIP a player; VIPs can join near-full arena
 	 * # /quake setmin [arena] [min] - Set minimum player requirement for arena
-	 * # /quake setmax [arena] [max] - Set msaximum player requirement for arena
+	 * # /quake setmax [arena] [max] - Set maximum player requirement for arena
+	 * # /quake setlobby - Set current location lobby
 	 * # /quake start [arena] - Force start an arena
 	 * # /quake stop [arena] - Force stop an arena
+	 * # /quake help - Show help page
 	 * - Add sounds for countdown when lesser than 10 seconds
-	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one.
+	 * - Add ability to double/triple/quadruple/more than 4 kills in one shoot!
+	 * - New sounds for shooting and player death; shooting sound has random pitch too, which imitate Hypixel's one
 	 * - Now keep inventory on death in matches
 	 * - Now player can't break/place blocks in matches
 	 * - Now player can't use commands in arenas except /quake leave
 	 * - Now player died because of lava or void will have corresponding death messages
+	 * - Metrics added. Thanks to Relicum!
+	 * - Over 50+ code optimizations. Thanks to IntelliJ! (Wait what?)
+	 * - Change the plugin name from QuakeX to QuakeDM
 	 * - Fix bugs:
+	 * # Inventories doesn't get restored
 	 * # Railgun gave to players don't have a custom name
 	 * # Arena meets the minimum player requirement and ready to start; 
 	 * if any player leaves which cause total amount of players is less than minimum requirement,
@@ -58,33 +72,31 @@ public class Main extends JavaPlugin {
 	 * TODO:
 	 * - VIP rank
 	 * - Hats and kits
-	 * - Permissions
 	 * - Regioned arena stats
 	 * - Stop players from respawning all in the same area
-	 * - Must buy first
-	 * - Inventory toggle bug
-	 * - Player leave bug
 	 * - Arena limit time
-	 * - Leave game, set scoreboard
 	 */
 
     public static Logger log;
-    public static PluginManager pm;
     public static YamlConfiguration LANG;
     public static File LANG_FILE;
 
-    public HashMap<String, QuakePlayer> players = new HashMap<String, QuakePlayer>();
-    public HashMap<String, QuakeArena> arenas = new HashMap<String, QuakeArena>();
+    public HashMap<String, QuakePlayer> players = new HashMap<>();
+    public HashMap<String, QuakeArena> arenas = new HashMap<>();
 
-    public HashMap<String, String> inventories = new HashMap<String, String>();
+    public HashMap<String, String> inventories = new HashMap<>();
+    public HashMap<String, String> match = new HashMap<>();
 
-    public Boolean statsEnabled;
+    public List<String> vips = new ArrayList<>();
+
     public Boolean vaultEnabled = false;
     public Boolean emeraldEnabled = false;
 
+    public int vipSlots = 1;
+
     public Location lobbyLoc;
 
-    public List<Location> signLocs = new ArrayList<Location>();
+    public List<Location> signLocs = new ArrayList<>();
 
     public Ability woodShoot = new Ability(1, 1500, TimeUnit.MILLISECONDS);
     public Ability stoneShoot = new Ability(1, 1400, TimeUnit.MILLISECONDS);
@@ -103,7 +115,7 @@ public class Main extends JavaPlugin {
             metrics.start();
         } catch (IOException e) {
 
-            System.out.println(e.getStackTrace().toString());
+            System.out.println(Arrays.toString(e.getStackTrace()));
         }
 
         Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
@@ -128,8 +140,8 @@ public class Main extends JavaPlugin {
                 }
                 // Set task for signs
                 List<String> signs = getConfig().getStringList("general.lobby.signs");
-                for (int index = 0; index < signs.size(); index++) {
-                    Location loc = Utils.stringToLocation(signs.get(index), true);
+                for (String sign : signs) {
+                    Location loc = Utils.stringToLocation(sign, true);
                     signLocs.add(loc);
                 }
                 Utils.setupSignTimer();
@@ -184,10 +196,6 @@ public class Main extends JavaPlugin {
         }
     }
 
-    public YamlConfiguration getLang() {
-        return LANG;
-    }
-
     public File getLangFile() {
         return LANG_FILE;
     }
@@ -213,36 +221,27 @@ public class Main extends JavaPlugin {
 
         }, 10);
 
-        if (getConfig().getBoolean("general.vault.enabled") == true) { // Vault enabled
-            if (!setupEconomy()) {
-                vaultEnabled = false;
-            } else {
-                vaultEnabled = true;
-            }
-        } else {
-            vaultEnabled = false;
-        }
+        vaultEnabled = getConfig().getBoolean("general.vault.enabled") && setupEconomy();
     }
 
     public void loadArenas() {
         // Load enabled arenas
         if (getConfig().getStringList("arenas.enabled-arenas") != null) {
             List<String> enabledArenas = getConfig().getStringList("arenas.enabled-arenas");
-            for (int index = 0; index < enabledArenas.size(); index++) {
+            for (String name : enabledArenas) {
                 // Load arena from disk
-                String name = enabledArenas.get(index);
                 final QuakeArena arena = new QuakeArena(this, name);
-                List<Location> spawns = new ArrayList<Location>();
+                List<Location> spawns = new ArrayList<>();
                 List<String> stringSpawns = getConfig().getStringList("arenas." + name + ".spawns");
-                for (int index2 = 0; index2 < stringSpawns.size(); index2++) {
-                    getLogger().info(stringSpawns.get(index2));
-                    spawns.add(Utils.stringToLocation(stringSpawns.get(index2), false));
+                for (String stringSpawn : stringSpawns) {
+                    getLogger().info(stringSpawn);
+                    spawns.add(Utils.stringToLocation(stringSpawn, false));
                 }
                 arena.min = getConfig().getInt("arenas." + name + ".min");
                 arena.max = getConfig().getInt("arenas." + name + ".max");
                 arena.name = name;
                 arena.displayName = getConfig().getString("arenas." + name + ".display-name");
-                arena.players = new ArrayList<String>();
+                arena.players = new ArrayList<>();
                 arena.spawns = spawns;
                 arena.status = "waiting";
                 arena.save();
@@ -260,16 +259,21 @@ public class Main extends JavaPlugin {
                 players.put(p.getName(), new QuakePlayer(this, p));
                 // If player is not initialized
                 if (getConfig().get("players." + p.getName() + ".points") == null) {
-                    Utils.setPoints(p.getName(), 999999999);
+                    Utils.setPoints(p.getName(), 0);
                 }
                 if (Utils.getHoe(p.getName()) == null) {
                     Utils.setHoe(p.getName(), "wood");
                 }
                 if (getConfig().get("players." + p.getName() + ".coins") == null) {
-                    Utils.setCoins(p.getName(), 999999999);
+                    Utils.setCoins(p.getName(), 500);
                 }
                 if (getConfig().get("players." + p.getName() + ".kills") == null) {
                     Utils.setKills(p.getName(), 0);
+                }
+                if (getConfig().get("players." + p.getName() + ".vip") != null) {
+                    if (getConfig().getBoolean("players." + p.getName() + ".vip")) {
+                        vips.add(p.getName());
+                    }
                 }
             }
         }

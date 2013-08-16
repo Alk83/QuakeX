@@ -21,7 +21,6 @@ import org.bukkit.event.entity.FoodLevelChangeEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.*;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.Plugin;
@@ -61,16 +60,19 @@ public class Listeners implements Listener {
                     if (!evt.getPlayer().getInventory().contains(shop) && evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
                         Player p = evt.getPlayer();
                         p.getInventory().addItem(shop);
-                        p.updateInventory();
+                        doInventoryUpdate(evt.getPlayer(), main);
                     }
                     if (evt.getPlayer().getInventory().contains(shop) && Utils.getQuakeArena(evt.getPlayer().getWorld().getName()) == null && !evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
                         Player p = evt.getPlayer();
                         p.getInventory().removeItem(shop);
-                        p.updateInventory();
+                        doInventoryUpdate(evt.getPlayer(), main);
                     }
                 }
 
             }, 10);
+        }
+        if (evt.getFrom() == main.lobbyLoc.getWorld()) {
+            evt.getPlayer().setScoreboard(Bukkit.getScoreboardManager().getNewScoreboard());
         }
     }
 
@@ -140,7 +142,7 @@ public class Listeners implements Listener {
                 } else {
                     p.sendMessage(Lang.ARENA_NOT_FOUND_CANT_CREATE.toString());
                 }
-            }
+            } else
             if (evt.getLine(0)
                     .equalsIgnoreCase("[QuakeStats]")) {
                 evt.setLine(0, null);
@@ -153,7 +155,7 @@ public class Listeners implements Listener {
     @
             EventHandler
     public void onRightClickEmerald(PlayerInteractEvent evt) {
-        if (evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
+        if (main.getConfig().get("general.lobby.spawn") != null && evt.getPlayer().getWorld().getName().equalsIgnoreCase(main.getConfig().getString("general.lobby.spawn").split(",")[0])) {
             if (evt.getAction() == Action.RIGHT_CLICK_BLOCK || evt.getAction() == Action.RIGHT_CLICK_AIR) {
                 Player p = evt.getPlayer();
                 if (p.getItemInHand().getType() == Material.EMERALD) { // Is emerald
@@ -179,10 +181,16 @@ public class Listeners implements Listener {
                     if (arena != null) { // Has arena
                         if (player.arena == "") { // Player not playing
                             if (arena.status == "waiting") { // Arena not playing
-                                if (Utils.getQuakeArena(name)
-                                        .players.size() < Utils.getQuakeArena(name)
-                                        .max) { // Not full
-                                    Utils.joinGame(p, name);
+                                if (arena.players.size() < arena.max) { // Not full
+                                    if (arena.players.size() + main.vipSlots < arena.max) { // Not VIP
+                                        Utils.joinGame(p, name);
+                                    } else {
+                                        if (Utils.isVIP(p)) {
+                                            Utils.joinGame(p, name);
+                                        } else {
+                                            p.sendMessage(Lang.VIP_ONLY.toString());
+                                        }
+                                    }
                                 } else {
                                     p.sendMessage(Lang.ARENA_FULL.toString());
                                 }
@@ -197,9 +205,9 @@ public class Listeners implements Listener {
                 if (s.getLine(2).equalsIgnoreCase(Lang.STATS.toString())) { // Stats sign
 
                     p.sendMessage(Lang.STATS.toString());
-                    p.sendMessage(Lang.POINTS.toString() + ": " + ChatColor.GRAY + Utils.getPoints(p.getName()));
-                    p.sendMessage(Lang.COINS.toString() + ": " + ChatColor.GRAY + Utils.getCoins(p.getName()));
-                    p.sendMessage(Lang.KILLS.toString() + ": " + ChatColor.GRAY + Utils.getKills(p.getName()));
+                    p.sendMessage("  " + Lang.POINTS.toString() + ": " + ChatColor.GRAY + Utils.getPoints(p.getName()));
+                    p.sendMessage("  " + Lang.COINS.toString() + ": " + ChatColor.GRAY + Utils.getCoins(p.getName()));
+                    p.sendMessage("  " + Lang.KILLS.toString() + ": " + ChatColor.GRAY + Utils.getKills(p.getName()));
 
                 	/*
                     s.setLine(0, ChatColor.DARK_RED + "" + ChatColor.BOLD + p.getName());
@@ -239,11 +247,11 @@ public class Listeners implements Listener {
             // If player is not initialized
             if (main.getConfig()
                     .get("players." + p.getName() + ".coins") == null) {
-                Utils.setCoins(p.getName(), 999999999);
+                Utils.setCoins(p.getName(), 500);
             }
             if (main.getConfig()
                     .get("players." + p.getName() + ".points") == null) {
-                Utils.setPoints(p.getName(), 999999999);
+                Utils.setPoints(p.getName(), 0);
             }
             if (main.getConfig()
                     .get("players." + p.getName() + ".kills") == null) {
@@ -259,9 +267,7 @@ public class Listeners implements Listener {
         Player p = evt.getPlayer();
         QuakePlayer player = Utils.getQuakePlayer(p.getName());
 
-        if (player.arena != "") { // Playing
-            //
-            // TODO: Returnable
+        if (player != null && player.arena != "") { // Playing
             Utils.leaveGame(p);
         }
 
@@ -312,12 +318,8 @@ public class Listeners implements Listener {
                 }
             }.runTaskLater(main, 3L);
             // Give back inventory
-            Inventory i = Utils.StringToInventory(main.inventories.get(evt.getPlayer()
-                    .getName()));
-            evt.getPlayer()
-                    .getInventory()
-                    .setContents(i.getContents());
-            evt.getPlayer().updateInventory();
+            evt.getPlayer().getInventory().setContents(ItemSerialization.fromBase64(main.match.get(evt.getPlayer().getName())).getContents());
+            doInventoryUpdate(evt.getPlayer(), main);
         }
     }
 
@@ -386,7 +388,7 @@ public class Listeners implements Listener {
                 player.updateInventory();
             }
 
-        }, 1L);
+        }, 10);
     }
 
     @
@@ -402,22 +404,19 @@ public class Listeners implements Listener {
             if (ent.getLastDamageCause() != null && ent.getLastDamageCause().getCause() != null) {
                 EntityDamageEvent ede = ent.getLastDamageCause();
                 DamageCause dc = ede.getCause();
-                if (ent instanceof Player) {
-                    Player p = (Player) ent;
-                    if (dc != null) {
-                        if (dc == DamageCause.LAVA) {
-                            Utils.broadcastPlayers(player.arena, Lang.LAVA_KILLED_PLAYER.toString().replace("%killed", p.getName()));
-                        }
-                        if (dc == DamageCause.VOID) {
-                            Utils.broadcastPlayers(player.arena, Lang.VOID_KILLED_PLAYER.toString().replace("%killed", p.getName()));
-                        }
+                Player p = (Player) ent;
+                if (dc != null) {
+                    if (dc == DamageCause.LAVA) {
+                        Utils.broadcastPlayers(player.arena, Lang.LAVA_KILLED_PLAYER.toString().replace("%killed", p.getName()));
+                    }
+                    if (dc == DamageCause.VOID) {
+                        Utils.broadcastPlayers(player.arena, Lang.VOID_KILLED_PLAYER.toString().replace("%killed", p.getName()));
                     }
                 }
             }
 
             // Save inventory
-            main.inventories.put(player.name, Utils.InventoryToString(evt.getEntity()
-                    .getInventory()));
+            main.match.put(player.name, ItemSerialization.toBase64(evt.getEntity().getInventory()));
             evt.getDrops().clear();
         }
     }
@@ -531,11 +530,9 @@ public class Listeners implements Listener {
                                 .getBlockY(), to.getBlockZ() - p.getEyeLocation()
                                 .getBlockZ()), 0.0D, (int) Math.floor(p.getEyeLocation()
                                 .distanceSquared(to)));
-                        Location blockToAdd = null;
+                        Location blockToAdd;
 
                         int streak = 0;
-
-                        // TODO: hit multiple players
 
                         while (blocksToAdd.hasNext()) {
                             blockToAdd = blocksToAdd.next();
@@ -614,14 +611,12 @@ public class Listeners implements Listener {
                             if (hit != null) {
                                 FireworkEffectPlayer fp = new FireworkEffectPlayer();
                                 try {
-/*                                    Color color = Utils.getColor(main.getConfig()
+                                    Color color = Utils.getColor(main.getConfig()
                                             .getString("railguns." + hoe + ".firework.color")
-                                            .toUpperCase());*/
-                                    Color color = main.getConfig().getColor("railguns." + hoe + ".firework.color");
-
-/*                                    Type type = Utils.getType(main.getConfig()
+                                            .toUpperCase());
+                                    /*Type type = Utils.getType(main.getConfig()
                                             .getString("railguns." + hoe + ".firework.type")
-                                            .toUpperCase());*/
+                                            .toUpperCase());         */
                                     Type type = Utils.getfireworkType(main.getConfig()
                                             .getString("railguns." + hoe + ".firework.type")
                                             .toUpperCase());
@@ -629,8 +624,6 @@ public class Listeners implements Listener {
                                             .withColor(color)
                                             .with(type)
                                             .build());
-                                } catch (IllegalArgumentException e) {
-                                    e.printStackTrace();
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                 }
@@ -648,7 +641,7 @@ public class Listeners implements Listener {
     private Object[] dataStore = new Object[5];
 
     public void playParticles(Location loc) throws Exception {
-        Firework fw = (Firework) loc.getWorld()
+        Firework fw = loc.getWorld()
                 .spawn(loc, Firework.class);
         if (dataStore[0] == null) dataStore[0] = getMethod(loc.getWorld()
                 .getClass(), "getHandle");
@@ -659,9 +652,7 @@ public class Listeners implements Listener {
                 .invoke(fw, (Object[]) null);
         if (dataStore[1] == null) dataStore[1] = getMethod(dataStore[3].getClass(), "addParticle");
         ((Method) dataStore[1])
-                .invoke(dataStore[3], new Object[]{
-                        "fireworksSpark", loc.getX(), loc.getY(), loc.getZ(), gen.nextGaussian() * 0.05D, -(loc.getZ() * 1.15D) * 0.5D, gen.nextGaussian() * 0.05D
-                });
+                .invoke(dataStore[3], "fireworksSpark", loc.getX(), loc.getY(), loc.getZ(), gen.nextGaussian() * 0.05D, -(loc.getZ() * 1.15D) * 0.5D, gen.nextGaussian() * 0.05D);
         fw.remove();
     }
 

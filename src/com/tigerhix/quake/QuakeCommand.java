@@ -2,14 +2,13 @@ package com.tigerhix.quake;
 
 import java.util.logging.Logger;
 
+import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
-
-import com.tigerhix.quake.Main;
-import com.tigerhix.quake.Utils;
 
 public class QuakeCommand implements CommandExecutor{
 	
@@ -35,7 +34,7 @@ public class QuakeCommand implements CommandExecutor{
         if (args.length == 1) {
         	String action = args[0];
         	
-        	if (action.equalsIgnoreCase("buy") && op && !playing) {
+        	if (action.equalsIgnoreCase("buy") && !playing) {
         		if (main.getConfig().getBoolean("general.shop.enabled")) {
         			if (Utils.isQuakePlayer(p.getName())) {
         				Utils.openMenu(p);
@@ -43,6 +42,22 @@ public class QuakeCommand implements CommandExecutor{
         		}
         		return true;
         	}
+            if (action.equalsIgnoreCase("help")) {
+                p.sendMessage(ChatColor.AQUA + "* Available commands:");
+                p.sendMessage(ChatColor.GRAY + "    # /quake join [name] - Join the specified arena." );
+                p.sendMessage(ChatColor.GRAY + "    # /quake leave - Leave the current arena." );
+                p.sendMessage(ChatColor.GRAY + "    # /quake buy - Open the buy menu." );
+                p.sendMessage(ChatColor.GRAY + "    # /quake stats - View your stats." );
+                p.sendMessage(ChatColor.GRAY + "    # /quake help - Show this help page." );
+                return true;
+            }
+            if (action.equalsIgnoreCase("stats")) {
+                p.sendMessage(Lang.STATS.toString());
+                p.sendMessage("  " + Lang.POINTS.toString() + ": " + ChatColor.GRAY + Utils.getPoints(p.getName()));
+                p.sendMessage("  " + Lang.COINS.toString() + ": " + ChatColor.GRAY + Utils.getCoins(p.getName()));
+                p.sendMessage("  " + Lang.KILLS.toString() + ": " + ChatColor.GRAY + Utils.getKills(p.getName()));
+                return true;
+            }
         	if (action.equalsIgnoreCase("addspawn") && op && !playing) {
         		if (Utils.getSelectedArena(p) == null) {
         			p.sendMessage(Lang.ARENA_NOT_SELECTED.toString());
@@ -101,7 +116,21 @@ public class QuakeCommand implements CommandExecutor{
         if (args.length == 2) {
         	String action = args[0];
         	String name = args[1];
-        	
+
+            if (action.equalsIgnoreCase("vip") && op) {
+                if (Bukkit.getPlayer(name) != null) {
+                    if (Utils.isVIP(Bukkit.getPlayer(name))) {
+                        p.sendMessage(Lang.VIP_ALREADY.toString());
+                        return true;
+                    }
+                    main.getConfig().set("players." + name + ".vip", true);
+                    main.saveConfig();
+                    main.vips.add(name);
+                    p.sendMessage(Lang.VIP_ADDED.toString());
+                    return true;
+                }
+            }
+
         	if (action.equalsIgnoreCase("create") && op && !playing) {
         		if (Utils.getQuakeArena(name) != null) {
         			// If arena already exists

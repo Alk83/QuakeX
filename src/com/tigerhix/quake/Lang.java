@@ -42,15 +42,18 @@ public enum Lang {
 
     ARENA_NOT_FOUND("arena-not-found", "&c Cannot find the arena."),
     ARENA_NOT_FOUND_CANT_CREATE("arena-not-found-cannot-create", "&c Cannot find the arena. Join sign not set."),
-    ARENA_NOT_SELECTED("arena-not-selected", "&c No arena selected. Please use '/quake select' to select an arena."),
+    ARENA_NOT_SELECTED("arena-not-selected", "&c No arena selected. Please use &b/quake select&c to select an arena."),
     ARENA_ALREADY_EXISTS("arena-already-exists", "&c Arena already exists!"),
-    ALREADY_JOINED("already-joined", "&c You are already in-game! Please use '/quake leave' to leave current arena."),
+    ALREADY_JOINED("already-joined", "&c You are already in-game! Please use &b/quake leave&c to leave current arena."),
     ARENA_NOT_JOINED("arena-not-joined", "&c You are not in-game!"),
     ARENA_ALREADY_STARTED("arena-already-started", "&c Arena is already started!"),
     ARENA_FULL("arena-full", "&c Arena is full!"),
     ARENA_LEAVED("arena-leaved", "&c You left the arena."),
     CANT_LEAVE_ARENA("cant-leave-arena", "&c Can't leave arena at this time!"),
     NO_COMMANDS("no-commands", "&c Non-Quake commands are disabled in arenas!"),
+    VIP_ONLY("vip-only", "&c Only VIP can join this arena for now!"),
+    VIP_ADDED("vip-added", "&7 VIP added."),
+    VIP_ALREADY("vip-already", "&c This player is already VIP!"),
 
     PLAYER_JOINED("player-joined", "&7 &b%player &7joined the game."),
     PLAYER_LEAVED("player-leaved", "&7 &b%player &7left the game."),
@@ -82,7 +85,7 @@ public enum Lang {
     QUADRUPLE_KILL("quadruple-kill", "&c&l Quadruple kill!!!"),
     UNBELIEVABLE_KILL("more-than-4-kill", "&c&l&o UNBELIEVABLE KILL!!!!"),
 
-    ARENA_CREATED("arena-created", "&7 Arena created and auto-selected. Please use '/quake addspawn' to add spawnpoints."),
+    ARENA_CREATED("arena-created", "&7 Arena created and auto-selected. Please use &b/quake addspawn&c to add spawnpoints."),
     ARENA_SELECTED("arena-selected", "&7 Arena selected."),
     JOIN_SIGN_SET("join-sign-set", "&7 Join sign set."),
     JOIN_SIGN_REMOVED("join-sign-removed", "&7 Join sign removed."),
@@ -90,7 +93,7 @@ public enum Lang {
     SPAWN_SET("spawn-set", "&7 Spawn set."),
     LOBBY_SET("lobby-set", "&7 Lobby set. Now you can put join signs in this world."),
     STATS_CHANGED("stats-changed", "&7 Stats changed."),
-    WRONG_COMMAND("wrong-command", "&c Unknown command or wrong arguments. Type '/quake help' for help."),
+    WRONG_COMMAND("wrong-command", "&c Unknown command or wrong arguments. Type &b/quake help&c for help."),
     DISABLED_COMMAND("disabled-command", "&c This command is disabled in matches.");
 
     private String path;
@@ -150,7 +153,8 @@ public enum Lang {
     public String toString() {
         if (words.contains(this.path))
             return ChatColor.translateAlternateColorCodes('&', LANG.getString(this.path, def));
-        return ChatColor.translateAlternateColorCodes('&', "&e[&b&lQuake&c&lDM&r&e]" + LANG.getString(this.path, def));
+        //"&7[&bQuake&7]"
+        return ChatColor.translateAlternateColorCodes('&', "&e[&b&lQuake&4&lDM&r&e]" + LANG.getString(this.path, def));
     }
 
     /**

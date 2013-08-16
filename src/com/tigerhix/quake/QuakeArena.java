@@ -37,10 +37,10 @@ public class QuakeArena {
     	main.getConfig().set("arenas." + name + ".max", max);
     	main.getConfig().set("arenas." + name + ".display-name", displayName);
     	// spawns
-    	List <String> stringSpawns = new ArrayList <String>();
-    	for (int index = 0; index < spawns.size(); index ++ ) {
-    		stringSpawns.add(Utils.locationToString(spawns.get(index), false));
-    	}
+    	List <String> stringSpawns = new ArrayList<>();
+        for (Location spawn : spawns) {
+            stringSpawns.add(Utils.locationToString(spawn, false));
+        }
     	main.getConfig().set("arenas." + name + ".spawns", stringSpawns);
     	// enabled-arenas
     	List <String> enabledArenas = main.getConfig().getStringList("arenas.enabled-arenas");
@@ -57,50 +57,11 @@ public class QuakeArena {
     	this.max = 8;
     	this.name = name;
     	this.displayName = name;
-    	this.players = new ArrayList <String>();
-    	this.spawns = new ArrayList <Location>();
+    	this.players = new ArrayList <>();
+    	this.spawns = new ArrayList <>();
     	this.status = "waiting";
         this.objective.setDisplaySlot(DisplaySlot.SIDEBAR);
         this.objective.setDisplayName(Lang.LEADERBOARD.toString());
     }
 
-    public int getMin() {
-        return min;
-    }
-
-    public int getMax() {
-        return max;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setMin(int newValue) {
-        min = newValue;
-    }
-
-    public void setMax(int newValue) {
-        max = newValue;
-    }
-
-    public void setName(String newValue) {
-        name = newValue;
-    }
-    
-    public List <String> getPlayers() {
-    	return players;
-    }
-    
-    public void addPlayer(String p) {
-    	// Arena
-    	players.add(p);
-    	// Player
-    	Utils.getQuakePlayer(p).arena = name;
-    }
-    
-    public void removePlayer(String p) {
-    	players.remove(p);
-    }
-    
 }

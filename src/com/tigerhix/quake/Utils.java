@@ -6,10 +6,8 @@ import org.bukkit.FireworkEffect.Type;
 import org.bukkit.block.BlockState;
 import org.bukkit.block.Sign;
 import org.bukkit.craftbukkit.v1_6_R2.entity.CraftPlayer;
-import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -18,17 +16,12 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Random;
+import java.util.*;
 import java.util.logging.Logger;
 
 public class Utils {
 
     public static Logger log;
-    public static Random randomizer = new Random();
 
     public static Main main;
     public static IconMenu buyMenu;
@@ -41,7 +34,7 @@ public class Utils {
 
         // Setup the buy menu
 
-        List<String> woodDescription = new ArrayList<String>();
+        List<String> woodDescription = new ArrayList<>();
         woodDescription.add(Lang.WOOD_HOE_DESCRIPTION.toString());
         woodDescription.add(Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString()
                 .replace("%time", String.valueOf((float) main.getConfig()
@@ -49,7 +42,7 @@ public class Utils {
         woodDescription.add(Lang.SHOP_PRICE.toString() + Lang.SHOP_PRICE_FORMAT.toString()
                 .replace("%price", "FREE"));
         woodDescription.add(Lang.SHOP_ALREADY_PURCHASED.toString()); // Everyone have a wood hoe right?
-        List<String> stoneDescription = new ArrayList<String>();
+        List<String> stoneDescription = new ArrayList<>();
         stoneDescription.add(Lang.STONE_HOE_DESCRIPTION.toString());
         stoneDescription.add(Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString()
                 .replace("%time", String.valueOf((float) main.getConfig()
@@ -57,7 +50,7 @@ public class Utils {
         stoneDescription.add(Lang.SHOP_PRICE.toString() + Lang.SHOP_PRICE_FORMAT.toString()
                 .replace("%price", String.valueOf(main.getConfig()
                         .getInt("railguns.stone.price"))));
-        List<String> ironDescription = new ArrayList<String>();
+        List<String> ironDescription = new ArrayList<>();
         ironDescription.add(Lang.IRON_HOE_DESCRIPTION.toString());
         ironDescription.add(Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString()
                 .replace("%time", String.valueOf((float) main.getConfig()
@@ -65,7 +58,7 @@ public class Utils {
         ironDescription.add(Lang.SHOP_PRICE.toString() + Lang.SHOP_PRICE_FORMAT.toString()
                 .replace("%price", String.valueOf(main.getConfig()
                         .getInt("railguns.iron.price"))));
-        List<String> goldDescription = new ArrayList<String>();
+        List<String> goldDescription = new ArrayList<>();
         goldDescription.add(Lang.GOLD_HOE_DESCRIPTION.toString());
         goldDescription.add(Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString()
                 .replace("%time", String.valueOf((float) main.getConfig()
@@ -73,7 +66,7 @@ public class Utils {
         goldDescription.add(Lang.SHOP_PRICE.toString() + Lang.SHOP_PRICE_FORMAT.toString()
                 .replace("%price", String.valueOf(main.getConfig()
                         .getInt("railguns.gold.price"))));
-        List<String> diamondDescription = new ArrayList<String>();
+        List<String> diamondDescription = new ArrayList<>();
         diamondDescription.add(Lang.DIAMOND_HOE_DESCRIPTION.toString());
         diamondDescription.add(Lang.SHOP_RELOAD_TIME.toString() + Lang.SHOP_RELOAD_TIME_FORMAT.toString()
                 .replace("%time", String.valueOf((float) main.getConfig()
@@ -108,11 +101,11 @@ public class Utils {
                 evt.setWillDestroy(true);
             }
         }, main)
-                .setOption(0, new ItemStack(Material.WOOD_HOE, 1), Lang.WOOD_HOE.toString(), woodDescription.toArray(new String[]{}))
-                .setOption(1, new ItemStack(Material.STONE_HOE, 1), Lang.STONE_HOE.toString(), stoneDescription.toArray(new String[]{}))
-                .setOption(2, new ItemStack(Material.IRON_HOE, 1), Lang.IRON_HOE.toString(), ironDescription.toArray(new String[]{}))
-                .setOption(3, new ItemStack(Material.GOLD_HOE, 1), Lang.GOLD_HOE.toString(), goldDescription.toArray(new String[]{}))
-                .setOption(4, new ItemStack(Material.DIAMOND_HOE, 1), Lang.DIAMOND_HOE.toString(), diamondDescription.toArray(new String[]{}));
+                .setOption(0, new ItemStack(Material.WOOD_HOE, 1), Lang.WOOD_HOE.toString(), woodDescription.toArray(new String[woodDescription.size()]))
+                .setOption(1, new ItemStack(Material.STONE_HOE, 1), Lang.STONE_HOE.toString(), stoneDescription.toArray(new String[stoneDescription.size()]))
+                .setOption(2, new ItemStack(Material.IRON_HOE, 1), Lang.IRON_HOE.toString(), ironDescription.toArray(new String[ironDescription.size()]))
+                .setOption(3, new ItemStack(Material.GOLD_HOE, 1), Lang.GOLD_HOE.toString(), goldDescription.toArray(new String[goldDescription.size()]))
+                .setOption(4, new ItemStack(Material.DIAMOND_HOE, 1), Lang.DIAMOND_HOE.toString(), diamondDescription.toArray(new String[diamondDescription.size()]));
         buyMenu.open(p);
     }
 
@@ -136,6 +129,8 @@ public class Utils {
     }
 
     public static void joinGame(final Player p, String name) {
+        main.inventories.put(p.getName(), ItemSerialization.toBase64(p.getInventory()));
+        p.getInventory().clear();
         // Teleport
         QuakePlayer player = getQuakePlayer(p.getName());
         QuakeArena arena = getQuakeArena(name);
@@ -153,10 +148,9 @@ public class Utils {
                             Override
                     public void run() {
                         p.getInventory().remove(Material.EMERALD);
-                        main.inventories.put(p.getName(), InventoryToString(p.getInventory()));
                         p.getInventory()
                                 .clear();
-                        p.updateInventory();
+                        Listeners.doInventoryUpdate(p, main);
                     }
 
                 }, 10);
@@ -171,6 +165,8 @@ public class Utils {
     }
 
     public static void leaveGame(final Player p) {
+        p.getInventory().clear();
+        p.getInventory().setContents(ItemSerialization.fromBase64(main.inventories.get(p.getName())).getContents());
         // Teleport
         QuakePlayer player = getQuakePlayer(p.getName());
         QuakeArena arena = getQuakeArena(player.arena);
@@ -227,12 +223,7 @@ public class Utils {
                     @
                             Override
                     public void run() {
-                        p.getInventory()
-                                .clear();
-                        Inventory i = StringToInventory(main.inventories.get(p.getName()));
-                        p.getInventory()
-                                .setContents(i.getContents());
-                        p.updateInventory();
+                        Listeners.doInventoryUpdate(p, main);
                         // Remove scoreboard
                         p.setScoreboard(Bukkit.getScoreboardManager()
                                 .getNewScoreboard());
@@ -344,12 +335,12 @@ public class Utils {
             if (getHoe(p.getName()) == null) {
                 setHoe(p.getName(), "wood");
             }
-            ItemStack hoe = new ItemStack(Material.WOOD_HOE, 1);
+            ItemStack hoe;
             if (getHoe(p.getName()).equalsIgnoreCase("wood")) {
                 hoe = new ItemStack(Material.WOOD_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.WOOD_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.WOOD_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
@@ -357,7 +348,7 @@ public class Utils {
                 hoe = new ItemStack(Material.STONE_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.STONE_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.STONE_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
@@ -365,7 +356,7 @@ public class Utils {
                 hoe = new ItemStack(Material.IRON_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.IRON_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.IRON_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
@@ -373,7 +364,7 @@ public class Utils {
                 hoe = new ItemStack(Material.GOLD_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.GOLD_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.GOLD_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
@@ -381,7 +372,7 @@ public class Utils {
                 hoe = new ItemStack(Material.DIAMOND_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.DIAMOND_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.DIAMOND_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
@@ -389,14 +380,14 @@ public class Utils {
                 hoe = new ItemStack(Material.WOOD_HOE, 1);
                 ItemMeta meta = hoe.getItemMeta();
                 meta.setDisplayName(Lang.WOOD_HOE.toString());
-                List<String> lore = new ArrayList<String>();
+                List<String> lore = new ArrayList<>();
                 lore.add(Lang.WOOD_HOE_DESCRIPTION.toString());
                 meta.setLore(lore);
                 hoe.setItemMeta(meta);
             }
             p.getInventory()
                     .addItem(hoe);
-            p.updateInventory();
+            Listeners.doInventoryUpdate(p, main);
             // Potion effects
             setPotionEffects(p);
             // Set scoreboard
@@ -441,7 +432,7 @@ public class Utils {
         setPoints(winnername, getPoints(winnername) + main.getConfig()
                 .getInt("general.points.win"));
         // Play firework
-        final List<Color> colorList = new ArrayList<Color>();
+        final List<Color> colorList = new ArrayList<>();
         for (int i = 0; i < 20; i++) {
             int index = randomInt(1, 17);
             Color color = getColorByIndex(index);
@@ -456,7 +447,7 @@ public class Utils {
                     public void run() {
                         Firework firework = p.getWorld()
                                 .spawn(p.getLocation(), Firework.class);
-                        FireworkMeta data = (FireworkMeta) firework.getFireworkMeta();
+                        FireworkMeta data = firework.getFireworkMeta();
                         data.addEffects(FireworkEffect.builder()
                                 .withColor(colorList.get(randomInt(0, 19)))
                                 .with(Type.BALL_LARGE)
@@ -491,7 +482,7 @@ public class Utils {
                         }
                         // Set arena
                         arena.status = "waiting";
-                        arena.players = new ArrayList<String>();
+                        arena.players = new ArrayList<>();
                         arena.waitingID = 0;
                         arena.scoreboardID = 0;
                         arena.seconds = 0;
@@ -524,10 +515,17 @@ public class Utils {
             stopGame(killer.arena, killer.name);
         }
         // Add points for killer
-        setPoints(killername, getPoints(killername) + main.getConfig()
+        if (isVIP(Bukkit.getPlayer(killername))) {
+            setPoints(killername, getPoints(killername) + main.getConfig()
+                    .getInt("general.points.kill") * 2);
+            setCoins(killername, getCoins(killername) + main.getConfig()
+                    .getInt("general.coins.kill") * 2);
+        } else {
+            setPoints(killername, getPoints(killername) + main.getConfig()
                 .getInt("general.points.kill"));
-        setCoins(killername, getCoins(killername) + main.getConfig()
+            setCoins(killername, getCoins(killername) + main.getConfig()
                 .getInt("general.coins.kill"));
+        }
         setKills(killername, getKills(killername) + 1);
     }
 
@@ -556,11 +554,11 @@ public class Utils {
     public static void broadcastPlayers(String name, String message) {
         QuakeArena arena = getQuakeArena(name);
         List<String> players = arena.players;
-        for (int index = 0; index < players.size(); index++) {
+        for (String player : players) {
             if (main.getServer()
-                    .getPlayer(players.get(index)) != null) {
+                    .getPlayer(player) != null) {
                 Player p = main.getServer()
-                        .getPlayer(players.get(index));
+                        .getPlayer(player);
                 p.sendMessage(message);
             }
         }
@@ -689,11 +687,6 @@ public class Utils {
                                         .getBoolean("general.stats.enabled")) {
                                     // Player is in lobby
                                     setStatsScoreboard(p);
-                                } else {
-                                    // Player is in other arena
-                                    // TODO: Other mini-games
-                                    p.setScoreboard(Bukkit.getScoreboardManager()
-                                            .getNewScoreboard());
                                 }
                             }
                         }
@@ -712,6 +705,7 @@ public class Utils {
                             if (state instanceof Sign) {
                                 Sign s = (Sign) state;
                                 QuakeArena arena = main.arenas.get(ChatColor.stripColor(s.getLine(1)));
+                                /*  ORIGINAL CODE
                                 if (arena.status != null) {
                                     if (arena.status == "waiting") {
                                         if (arena.players.size() < arena.max) {
@@ -724,26 +718,31 @@ public class Utils {
                                     }
                                 }
                                 s.setLine(2, arena.players.size() + "/" + arena.max);
+                                */
+
+                                if (arena.status != null) {
+                                    if (arena.status == "waiting") {
+                                        if (arena.players.size() < arena.max) {
+                                            if (arena.players.size() + main.vipSlots >= arena.max) {
+                                                s.setLine(0, ChatColor.DARK_PURPLE + "" + ChatColor.BOLD + "[VIP]");
+                                            } else {
+                                                s.setLine(0, ChatColor.DARK_GREEN + "" + ChatColor.BOLD + "[Join]");
+                                            }
+                                        } else {
+                                            s.setLine(0, ChatColor.DARK_GRAY + "" + ChatColor.BOLD + "[Full]");
+                                        }
+                                        //s.setLine(3, ChatColor.BOLD + "Click to join");
+                                    } else {
+                                        s.setLine(0, ChatColor.DARK_RED + "" + ChatColor.BOLD + "[NotJoinable]");
+                                        //s.setLine(3, ChatColor.BOLD + "In progress");
+                                    }
+                                }
+                                s.setLine(2, arena.players.size() + "/" + arena.max);
                                 s.update();
                             }
                         }
                     }
                 }, 40, 10);
-    }
-
-    public static void setArenaScoreboardSS(Player p) {
-        ScoreboardManager manager = Bukkit.getScoreboardManager();
-        Scoreboard board = manager.getNewScoreboard();
-
-        Objective objective = board.registerNewObjective("quake", "dummy");
-        objective.setDisplaySlot(DisplaySlot.SIDEBAR);
-        objective.setDisplayName(Lang.LEADERBOARD.toString());
-
-        Score playerScore = objective.getScore(p);
-        playerScore.setScore(getQuakePlayer(p.getName())
-                .score);
-
-        p.setScoreboard(board);
     }
 
     public static void setStatsScoreboard(Player p) {
@@ -802,92 +801,18 @@ public class Utils {
         String[] stringListLoc = str.split(",");
         if (isSign) {
             if (stringListLoc.length == 3) {
-                Location loc = new Location(main.lobbyLoc.getWorld(), Double.parseDouble(stringListLoc[0]), Double.parseDouble(stringListLoc[1]), Double.parseDouble(stringListLoc[2]));
-                return loc;
+                return new Location(main.lobbyLoc.getWorld(), Double.parseDouble(stringListLoc[0]), Double.parseDouble(stringListLoc[1]), Double.parseDouble(stringListLoc[2]));
             } else {
                 return null;
             }
         } else {
             if (stringListLoc.length == 6) {
-                Location loc = new Location(main.getServer()
+                return new Location(main.getServer()
                         .getWorld(stringListLoc[0]), Double.parseDouble(stringListLoc[1]), Double.parseDouble(stringListLoc[2]), Double.parseDouble(stringListLoc[3]), Float.parseFloat(stringListLoc[4]), Float.parseFloat(stringListLoc[5]));
-                return loc;
             } else {
                 return null;
             }
         }
-    }
-
-    public static String InventoryToString(Inventory invInventory) {
-        String serialization = invInventory.getSize() + ";";
-        for (int i = 0; i < invInventory.getSize(); i++) {
-            ItemStack is = invInventory.getItem(i);
-            if (is != null) {
-                String serializedItemStack = new String();
-
-                String isType = String.valueOf(is.getType()
-                        .getId());
-                serializedItemStack += "t@" + isType;
-
-                if (is.getDurability() != 0) {
-                    String isDurability = String.valueOf(is.getDurability());
-                    serializedItemStack += ":d@" + isDurability;
-                }
-
-                if (is.getAmount() != 1) {
-                    String isAmount = String.valueOf(is.getAmount());
-                    serializedItemStack += ":a@" + isAmount;
-                }
-
-                Map<Enchantment, Integer> isEnch = is.getEnchantments();
-                if (isEnch.size() > 0) {
-                    for (Entry<Enchantment, Integer> ench : isEnch.entrySet()) {
-                        serializedItemStack += ":e@" + ench.getKey()
-                                .getId() + "@" + ench.getValue();
-                    }
-                }
-
-                serialization += i + "#" + serializedItemStack + ";";
-            }
-        }
-        return serialization;
-    }
-
-    public static Inventory StringToInventory(String invString) {
-        String[] serializedBlocks = invString.split(";");
-        String invInfo = serializedBlocks[0];
-        Inventory deserializedInventory = Bukkit.getServer()
-                .createInventory(null, Integer.valueOf(invInfo));
-
-        for (int i = 1; i < serializedBlocks.length; i++) {
-            String[] serializedBlock = serializedBlocks[i].split("#");
-            int stackPosition = Integer.valueOf(serializedBlock[0]);
-
-            if (stackPosition >= deserializedInventory.getSize()) {
-                continue;
-            }
-
-            ItemStack is = null;
-            Boolean createdItemStack = false;
-
-            String[] serializedItemStack = serializedBlock[1].split(":");
-            for (String itemInfo : serializedItemStack) {
-                String[] itemAttribute = itemInfo.split("@");
-                if (itemAttribute[0].equals("t")) {
-                    is = new ItemStack(Material.getMaterial(Integer.valueOf(itemAttribute[1])));
-                    createdItemStack = true;
-                } else if (itemAttribute[0].equals("d") && createdItemStack) {
-                    is.setDurability(Short.valueOf(itemAttribute[1]));
-                } else if (itemAttribute[0].equals("a") && createdItemStack) {
-                    is.setAmount(Integer.valueOf(itemAttribute[1]));
-                } else if (itemAttribute[0].equals("e") && createdItemStack) {
-                    is.addEnchantment(Enchantment.getById(Integer.valueOf(itemAttribute[1])), Integer.valueOf(itemAttribute[2]));
-                }
-            }
-            deserializedInventory.setItem(stackPosition, is);
-        }
-
-        return deserializedInventory;
     }
 
     public static int randomInt(int aStart, int aEnd) {
@@ -899,12 +824,11 @@ public class Utils {
         long range = (long) aEnd - (long) aStart + 1;
         // Compute a fraction of the range, 0 <= frac < range
         long fraction = (long) (range * aRandom.nextDouble());
-        int randomNumber = (int) (fraction + aStart);
-        return randomNumber;
+        return (int) (fraction + aStart);
     }
 
     public static Color getColorByIndex(int index) {
-        Color color = Color.AQUA;
+        Color color;
         switch (index) {
             case 1:
                 color = Color.AQUA;
@@ -999,11 +923,9 @@ public class Utils {
     }
 
 
-/*    //This is a pointless function you are passing in a string to return the Color format why not just do Color.AQUA from
-    //You code direct if thats the color you want.
     public static Color getColor(String str) {
 
-        Color color = Color.AQUA;
+        Color color;
         switch (str) {
             case "AQUA":
                 color = Color.AQUA;
@@ -1058,7 +980,7 @@ public class Utils {
                 break;
         }
         return color;
-    }*/
+    }
 
     public static void playSound(Player to, String sound, Location loc, float pitch, float volume) {
         ((CraftPlayer) to)
@@ -1066,18 +988,8 @@ public class Utils {
                 .playerConnection.sendPacket(new Packet62NamedSoundEffect(sound, loc.getBlockX(), loc.getBlockY(), loc.getBlockZ(), pitch, volume));
     }
 
-    public static void playSound(Player to, String sound, float pitch, float volume) {
-        playSound(to, sound, to.getLocation(), pitch, volume);
-    }
-
-    public String[] increaseArray(String[] theArray, int increaseBy) {
-        int i = theArray.length;
-        int n = ++i;
-        String[] newArray = new String[n];
-        for (int cnt = 0; cnt < theArray.length; cnt++) {
-            newArray[cnt] = theArray[cnt];
-        }
-        return newArray;
+    public static Boolean isVIP(Player p) {
+        return main.vips.contains(p.getName());
     }
 
 }
