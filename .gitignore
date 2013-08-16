@@ -24,7 +24,7 @@ local.properties
 # CDT-specific
 .cproject
 *.project
-
+out/
 # PDT-specific
 .buildpath
 
