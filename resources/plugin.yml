@@ -1,7 +1,7 @@
 name: QuakeDM
 main: com.tigerhix.quake.Main
 authors: [TigerHix,Relicum]
-version: 0.2.0
+version: 0.2.1
 website: http://dev.bukkit.org/bukkit-plugins/quake-deathmatch/
 description: A deathmatch game inspired by Hypixel.
 softdepend: [Vault]
