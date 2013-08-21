@@ -24,7 +24,7 @@ import java.util.logging.Logger;
 public class Main extends JavaPlugin {
 
 	/*
-     * CHANGELOG:
+	 * CHANGELOG:
      * - Remove lobby-world setting. Replaced with /quake setlobby, a better solution.
 	 * - Add shop; buy 5 railguns from shop using coins you got from matches!
 	 * - Add VIP support. If an arena needs one more player to reach its max (like 7/8), only VIP can join it
@@ -77,214 +77,214 @@ public class Main extends JavaPlugin {
 	 * - Arena limit time
 	 */
 
-    public static Logger log;
-    public static YamlConfiguration LANG;
-    public static File LANG_FILE;
+	public static Logger log;
+	public static YamlConfiguration LANG;
+	public static File LANG_FILE;
 
-    public HashMap<String, QuakePlayer> players = new HashMap<>();
-    public HashMap<String, QuakeArena> arenas = new HashMap<>();
+	public HashMap<String, QuakePlayer> players = new HashMap<>();
+	public HashMap<String, QuakeArena> arenas = new HashMap<>();
 
-    public HashMap<String, String> inventories = new HashMap<>();
-    public HashMap<String, String> match = new HashMap<>();
+	public HashMap<String, String> inventories = new HashMap<>();
+	public HashMap<String, String> match = new HashMap<>();
 
-    public List<String> vips = new ArrayList<>();
+	public List<String> vips = new ArrayList<>();
 
-    public Boolean vaultEnabled = false;
-    public Boolean emeraldEnabled = false;
+	public Boolean vaultEnabled = false;
+	public Boolean emeraldEnabled = false;
 
-    public int vipSlots = 1;
+	public int vipSlots = 1;
 
-    public Location lobbyLoc;
+	public Location lobbyLoc;
 
-    public List<Location> signLocs = new ArrayList<>();
+	public List<Location> signLocs = new ArrayList<>();
 
-    public Ability woodShoot = new Ability(1, 1500, TimeUnit.MILLISECONDS);
-    public Ability stoneShoot = new Ability(1, 1400, TimeUnit.MILLISECONDS);
-    public Ability ironShoot = new Ability(1, 1300, TimeUnit.MILLISECONDS);
-    public Ability goldShoot = new Ability(1, 1200, TimeUnit.MILLISECONDS);
-    public Ability diamondShoot = new Ability(1, 1100, TimeUnit.MILLISECONDS);
-    public Ability exp = new Ability(1, 50, TimeUnit.MILLISECONDS);
+	public Ability woodShoot = new Ability(1, 1500, TimeUnit.MILLISECONDS);
+	public Ability stoneShoot = new Ability(1, 1400, TimeUnit.MILLISECONDS);
+	public Ability ironShoot = new Ability(1, 1300, TimeUnit.MILLISECONDS);
+	public Ability goldShoot = new Ability(1, 1200, TimeUnit.MILLISECONDS);
+	public Ability diamondShoot = new Ability(1, 1100, TimeUnit.MILLISECONDS);
+	public Ability exp = new Ability(1, 50, TimeUnit.MILLISECONDS);
 
-    @
-            Override
-    public void onEnable() {
+	@
+			Override
+	public void onEnable() {
 
-        //Load Live Metrics
-        try {
-            Metrics metrics = new Metrics(this);
-            metrics.start();
-        } catch (IOException e) {
+		//Load Live Metrics
+		try {
+			Metrics metrics = new Metrics(this);
+			metrics.start();
+		} catch (IOException e) {
 
-            System.out.println(Arrays.toString(e.getStackTrace()));
-        }
+			System.out.println(Arrays.toString(e.getStackTrace()));
+		}
 
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 
-            @Override
-            public void run() {
-                loadConfig();
-                // Define variables
-                if (getConfig().getString("general.lobby.spawn") != null) {
-                    getLogger().info("Lobby spawn set!");
-                    String stringLoc = getConfig().getString("general.lobby.spawn");
-                    lobbyLoc = Utils.stringToLocation(stringLoc, false);
-                    if (getConfig().getBoolean("general.shop.emerald")) {
-                        emeraldEnabled = true;
-                    }
-                } else {
-                    getLogger().info("Lobby spawn not found in config.yml. Automatically set to the main spawn.");
-                    lobbyLoc = getServer().getWorlds().get(0).getSpawnLocation();
-                    if (getConfig().getBoolean("general.shop.emerald")) {
-                        getServer().getLogger().log(Level.WARNING, "Plugin WILL NOT give emerald shop to players; lobby spawn not set. Use /quake setlobby to set one first.");
-                    }
-                }
-                // Set task for signs
-                List<String> signs = getConfig().getStringList("general.lobby.signs");
-                for (String sign : signs) {
-                    Location loc = Utils.stringToLocation(sign, true);
-                    signLocs.add(loc);
-                }
-                Utils.setupSignTimer();
-            }
+			@Override
+			public void run() {
+				loadConfig();
+				// Define variables
+				if (getConfig().getString("general.lobby.spawn") != null) {
+					getLogger().info("Lobby spawn set!");
+					String stringLoc = getConfig().getString("general.lobby.spawn");
+					lobbyLoc = Utils.stringToLocation(stringLoc, false);
+					if (getConfig().getBoolean("general.shop.emerald")) {
+						emeraldEnabled = true;
+					}
+				} else {
+					getLogger().info("Lobby spawn not found in config.yml. Automatically set to the main spawn.");
+					lobbyLoc = getServer().getWorlds().get(0).getSpawnLocation();
+					if (getConfig().getBoolean("general.shop.emerald")) {
+						getServer().getLogger().log(Level.WARNING, "Plugin WILL NOT give emerald shop to players; lobby spawn not set. Use /quake setlobby to set one first.");
+					}
+				}
+				// Set task for signs
+				List<String> signs = getConfig().getStringList("general.lobby.signs");
+				for (String sign : signs) {
+					Location loc = Utils.stringToLocation(sign, true);
+					signLocs.add(loc);
+				}
+				Utils.setupSignTimer();
+			}
 
-        }, 10);
+		}, 10);
 
-        loadLang();
+		loadLang();
 
-        // Load listeners
-        new Listeners(this);
-        // Load utils
-        new Utils(this);
-        // Set task for scoreboard
-        Utils.setupScoreboardTimer();
-        // Register command
-        getCommand("quake").setExecutor(new QuakeCommand(this));
-    }
+		// Load listeners
+		new Listeners(this);
+		// Load utils
+		new Utils(this);
+		// Set task for scoreboard
+		Utils.setupScoreboardTimer();
+		// Register command
+		getCommand("quake").setExecutor(new QuakeCommand(this));
+	}
 
-    public void loadLang() {
-        File lang = new File(getDataFolder(), "lang.yml");
-        if (!lang.exists()) {
-            try {
-                getDataFolder().mkdir();
-                lang.createNewFile();
-                InputStream defConfigStream = this.getResource("lang.yml");
-                if (defConfigStream != null) {
-                    YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
-                    defConfig.save(lang);
-                    Lang.setFile(defConfig);
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-                log.severe("Failed to save lang.yml.");
-                this.setEnabled(false);
-            }
-        }
-        YamlConfiguration conf = YamlConfiguration.loadConfiguration(lang);
-        for (Lang item : Lang.values()) {
-            if (conf.getString(item.getPath()) == null) {
-                conf.set(item.getPath(), item.getDefault());
-            }
-        }
-        Lang.setFile(conf);
-        Main.LANG = conf;
-        Main.LANG_FILE = lang;
-        try {
-            conf.save(getLangFile());
-        } catch (IOException e) {
-            log.log(Level.WARNING, "Failed to save lang.yml.");
-            e.printStackTrace();
-        }
-    }
+	public void loadLang() {
+		File lang = new File(getDataFolder(), "lang.yml");
+		if (!lang.exists()) {
+			try {
+				getDataFolder().mkdir();
+				lang.createNewFile();
+				InputStream defConfigStream = this.getResource("lang.yml");
+				if (defConfigStream != null) {
+					YamlConfiguration defConfig = YamlConfiguration.loadConfiguration(defConfigStream);
+					defConfig.save(lang);
+					Lang.setFile(defConfig);
+				}
+			} catch (IOException e) {
+				e.printStackTrace();
+				log.severe("Failed to save lang.yml.");
+				this.setEnabled(false);
+			}
+		}
+		YamlConfiguration conf = YamlConfiguration.loadConfiguration(lang);
+		for (Lang item : Lang.values()) {
+			if (conf.getString(item.getPath()) == null) {
+				conf.set(item.getPath(), item.getDefault());
+			}
+		}
+		Lang.setFile(conf);
+		Main.LANG = conf;
+		Main.LANG_FILE = lang;
+		try {
+			conf.save(getLangFile());
+		} catch (IOException e) {
+			log.log(Level.WARNING, "Failed to save lang.yml.");
+			e.printStackTrace();
+		}
+	}
 
-    public File getLangFile() {
-        return LANG_FILE;
-    }
+	public File getLangFile() {
+		return LANG_FILE;
+	}
 
-    public void loadConfig() {
+	public void loadConfig() {
 
-        if (!new File(getDataFolder(), "config.yml").exists()) {
-            saveDefaultConfig();
-        }
+		if (!new File(getDataFolder(), "config.yml").exists()) {
+			saveDefaultConfig();
+		}
 
 
-        loadPlayers();
-        loadRailguns();
-        // loadArenas() needs a delay anyway
-        Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+		loadPlayers();
+		loadRailguns();
+		// loadArenas() needs a delay anyway
+		Bukkit.getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
 
-            @Override
-            public void run() {
+			@Override
+			public void run() {
 
-                loadArenas();
+				loadArenas();
 
-            }
+			}
 
-        }, 10);
+		}, 10);
 
-        vaultEnabled = getConfig().getBoolean("general.vault.enabled") && setupEconomy();
-    }
+		vaultEnabled = getConfig().getBoolean("general.vault.enabled") && setupEconomy();
+	}
 
-    public void loadArenas() {
-        // Load enabled arenas
-        if (getConfig().getStringList("arenas.enabled-arenas") != null) {
-            List<String> enabledArenas = getConfig().getStringList("arenas.enabled-arenas");
-            for (String name : enabledArenas) {
-                // Load arena from disk
-                final QuakeArena arena = new QuakeArena(this, name);
-                List<Location> spawns = new ArrayList<>();
-                List<String> stringSpawns = getConfig().getStringList("arenas." + name + ".spawns");
-                for (String stringSpawn : stringSpawns) {
-                    getLogger().info(stringSpawn);
-                    spawns.add(Utils.stringToLocation(stringSpawn, false));
-                }
-                arena.min = getConfig().getInt("arenas." + name + ".min");
-                arena.max = getConfig().getInt("arenas." + name + ".max");
-                arena.name = name;
-                arena.displayName = getConfig().getString("arenas." + name + ".display-name");
-                arena.players = new ArrayList<>();
-                arena.spawns = spawns;
-                arena.status = "waiting";
-                arena.save();
-                // Put into HashMap
-                arenas.put(name, arena);
-                getLogger().info("Arena " + name + " enabled!");
-            }
-        }
-    }
+	public void loadArenas() {
+		// Load enabled arenas
+		if (getConfig().getStringList("arenas.enabled-arenas") != null) {
+			List<String> enabledArenas = getConfig().getStringList("arenas.enabled-arenas");
+			for (String name : enabledArenas) {
+				// Load arena from disk
+				final QuakeArena arena = new QuakeArena(this, name);
+				List<Location> spawns = new ArrayList<>();
+				List<String> stringSpawns = getConfig().getStringList("arenas." + name + ".spawns");
+				for (String stringSpawn : stringSpawns) {
+					getLogger().info(stringSpawn);
+					spawns.add(Utils.stringToLocation(stringSpawn, false));
+				}
+				arena.min = getConfig().getInt("arenas." + name + ".min");
+				arena.max = getConfig().getInt("arenas." + name + ".max");
+				arena.name = name;
+				arena.displayName = getConfig().getString("arenas." + name + ".display-name");
+				arena.players = new ArrayList<>();
+				arena.spawns = spawns;
+				arena.status = "waiting";
+				arena.save();
+				// Put into HashMap
+				arenas.put(name, arena);
+				getLogger().info("Arena " + name + " enabled!");
+			}
+		}
+	}
 
-    public void loadPlayers() {
-        for (Player p : Bukkit.getOnlinePlayers()) {
-            // Check if player in players HashMap
-            if (!players.containsKey(p.getName())) {
-                players.put(p.getName(), new QuakePlayer(this, p));
-                // If player is not initialized
-                if (getConfig().get("players." + p.getName() + ".points") == null) {
-                    Utils.setPoints(p.getName(), 0);
-                }
-                if (Utils.getHoe(p.getName()) == null) {
-                    Utils.setHoe(p.getName(), "wood");
-                }
-                if (getConfig().get("players." + p.getName() + ".coins") == null) {
-                    Utils.setCoins(p.getName(), 500);
-                }
-                if (getConfig().get("players." + p.getName() + ".kills") == null) {
-                    Utils.setKills(p.getName(), 0);
-                }
-                if (getConfig().get("players." + p.getName() + ".vip") != null) {
-                    if (getConfig().getBoolean("players." + p.getName() + ".vip")) {
-                        vips.add(p.getName());
-                    }
-                }
-            }
-        }
-    }
+	public void loadPlayers() {
+		for (Player p : Bukkit.getOnlinePlayers()) {
+			// Check if player in players HashMap
+			if (!players.containsKey(p.getName())) {
+				players.put(p.getName(), new QuakePlayer(this, p));
+				// If player is not initialized
+				if (getConfig().get("players." + p.getName() + ".points") == null) {
+					Utils.setPoints(p.getName(), 0);
+				}
+				if (Utils.getHoe(p.getName()) == null) {
+					Utils.setHoe(p.getName(), "wood");
+				}
+				if (getConfig().get("players." + p.getName() + ".coins") == null) {
+					Utils.setCoins(p.getName(), 500);
+				}
+				if (getConfig().get("players." + p.getName() + ".kills") == null) {
+					Utils.setKills(p.getName(), 0);
+				}
+				if (getConfig().get("players." + p.getName() + ".vip") != null) {
+					if (getConfig().getBoolean("players." + p.getName() + ".vip")) {
+						vips.add(p.getName());
+					}
+				}
+			}
+		}
+	}
 
-    public void loadRailguns() {
-        woodShoot = new Ability(1, getConfig().getInt("railguns.wood.reload"), TimeUnit.MILLISECONDS);
-    }
+	public void loadRailguns() {
+		woodShoot = new Ability(1, getConfig().getInt("railguns.wood.reload"), TimeUnit.MILLISECONDS);
+	}
 
-    // public Permission permission = null;
-    public Economy economy = null;
+	// public Permission permission = null;
+	public Economy economy = null;
 
     /*
     private boolean setupPermissions()
@@ -297,13 +297,13 @@ public class Main extends JavaPlugin {
     }
     */
 
-    private boolean setupEconomy() {
-        RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
-        if (economyProvider != null) {
-            economy = economyProvider.getProvider();
-        }
+	private boolean setupEconomy() {
+		RegisteredServiceProvider<Economy> economyProvider = getServer().getServicesManager().getRegistration(net.milkbowl.vault.economy.Economy.class);
+		if (economyProvider != null) {
+			economy = economyProvider.getProvider();
+		}
 
-        return (economy != null);
-    }
+		return (economy != null);
+	}
 
 }
